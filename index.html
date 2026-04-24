@@ -199,12 +199,12 @@
       <div class="modal-sec">🇺🇸 美股基金（手动记录）</div>
       <div id="stockInputs"></div>
       
-      <div class="modal-sec" style="margin-top:24px;">🪙 币圈（自动计算盈亏）</div>
+      <div class="modal-sec" style="margin-top:24px;">🪙 币圈持仓</div>
       <div id="cryptoInputs"></div>
       
       <div class="modal-sec" style="margin-top:24px;">⚙️ 系统参数</div>
       <div class="modal-input-card">
-        <label>美元兑人民币汇率</label>
+        <label>💵 美元兑人民币汇率 (实时修改)</label>
         <input type="number" id="inputRate" step="0.01">
       </div>
     </div>
@@ -229,7 +229,7 @@ let defaultData = {
   crypto: [
     { symbol: 'BTC',   icon: '₿',  qty: 0.00044249,  costPrice: 71229 },
     { symbol: 'ETH',   icon: 'Ξ',  qty: 0.00649104,  costPrice: 2259  },
-    { symbol: 'USDT',  icon: '💵', qty: 30.96545124, costPrice: 1     },
+    { symbol: 'USDT',  icon: '💵', qty: 30.96545124, costPrice: 7.20  }, // USDT 存的是人民币成本
     { symbol: 'SOL',   icon: '◎',  qty: 0.11253588,  costPrice: 87.63 },
     { symbol: 'BNB',   icon: '🔶', qty: 0.01015393,  costPrice: 607.9 },
     { symbol: 'PEPE',  icon: '🐸', qty: 1482370.578, costPrice: 0.00000337 },
@@ -239,11 +239,21 @@ let defaultData = {
   ]
 };
 
-let holdings = JSON.parse(localStorage.getItem('portfolio_v8'));
+// 升级到 v9：专为 USDT 人民币计价升级
+let holdings = JSON.parse(localStorage.getItem('portfolio_v9'));
 
 if (!holdings) {
-  holdings = defaultData;
-  localStorage.setItem('portfolio_v8', JSON.stringify(holdings));
+  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v8'));
+  if(oldHoldings) {
+    holdings = oldHoldings;
+    holdings.crypto.forEach(c => {
+      // 迁移时把 USDT 的旧成本1改成7.20，防止报错
+      if(c.symbol === 'USDT' && c.costPrice === 1) c.costPrice = 7.20;
+    });
+  } else {
+    holdings = defaultData;
+  }
+  localStorage.setItem('portfolio_v9', JSON.stringify(holdings));
 }
 
 let prices = {};
@@ -257,7 +267,6 @@ async function fetchPrices() {
   try {
     const results = await Promise.all(nonStable.map(c => fetch(`https://www.okx.com/api/v5/market/ticker?instId=${c.symbol}-USDT`).then(r => r.json()).catch(() => null)));
     results.forEach((r, i) => { if (r && r.data && r.data[0]) prices[nonStable[i].symbol] = parseFloat(r.data[0].last); });
-    prices['USDT'] = 1;
     const now = new Date();
     document.getElementById('lastUpdate').textContent = `最后更新：${now.toTimeString().split(' ')[0]}`;
     document.getElementById('statusText').textContent = "数据已同步 · 每30秒自动刷新";
@@ -275,7 +284,10 @@ function render() {
   holdings.stocks.forEach(s => { stockTotal += s.value; });
   
   let cryptoTotal = 0;
-  holdings.crypto.forEach(c => { cryptoTotal += c.qty * (prices[c.symbol] || 0) * rate; });
+  holdings.crypto.forEach(c => { 
+    const p = c.symbol === 'USDT' ? 1 : (prices[c.symbol] || 0);
+    cryptoTotal += c.qty * p * rate; 
+  });
 
   const grand = stockTotal + cryptoTotal;
   const sp = grand ? (stockTotal / grand * 100).toFixed(1) : 0;
@@ -316,28 +328,37 @@ function render() {
   }).join('');
 
   document.getElementById('cryptoItems').innerHTML = holdings.crypto.map(c => {
-    const p = prices[c.symbol] || 0;
+    const isUsdt = c.symbol === 'USDT';
+    const p = isUsdt ? 1 : (prices[c.symbol] || 0);
     const usdVal = c.qty * p;
     const cnyVal = usdVal * rate;
     
-    const costUsd = c.qty * c.costPrice;
-    const gainU = usdVal - costUsd;
-    const gainCny = gainU * rate;
-    const gainPct = costUsd > 0 ? (gainU / costUsd * 100) : 0;
+    let gainCny = 0;
+    let gainPct = 0;
+    let subtext = '';
+
+    if (isUsdt) {
+      // USDT 特殊逻辑：用人民币现值 - 人民币买入成本
+      const costCny = c.qty * c.costPrice; 
+      gainCny = cnyVal - costCny;
+      gainPct = costCny > 0 ? (gainCny / costCny * 100) : 0;
+      subtext = `实时¥${rate.toFixed(2)} · 成本¥${c.costPrice}`;
+    } else {
+      // 常规币种：计算美元浮盈后折算为人民币
+      const costUsd = c.qty * c.costPrice;
+      const gainU = usdVal - costUsd;
+      gainCny = gainU * rate;
+      gainPct = costUsd > 0 ? (gainU / costUsd * 100) : 0;
+      subtext = `$${p < 1 ? p.toFixed(6) : p.toLocaleString()} · 成本$${c.costPrice}`;
+    }
     
-    const sign = gainCny > 0.005 ? '+' : (gainCny < -0.005 ? '' : ''); // 如果是负数，toFixed自带负号
+    // 强制判断符号（大于或小于 0.005 才显示符号，避免 -0.00¥ 的诡异情况）
+    const sign = gainCny > 0.005 ? '+' : (gainCny < -0.005 ? '-' : ''); 
     const colorClass = gainCny > 0.01 ? 'tg' : (gainCny < -0.01 ? 'tr' : 'tn');
     
     let tagStr = '获取中...';
-    let pstr = '...';
     if(p > 0) {
-      if(c.symbol === 'USDT') {
-         tagStr = '= ¥' + rate.toFixed(2);
-         pstr = '$1.00';
-      } else {
-         tagStr = `${sign}${gainCny.toFixed(2)}¥ (${sign}${gainPct.toFixed(2)}%)`;
-         pstr = '$' + (p < 1 ? p.toFixed(6) : p.toLocaleString());
-      }
+      tagStr = `${sign}${Math.abs(gainCny).toFixed(2)}¥ (${sign}${Math.abs(gainPct).toFixed(2)}%)`;
     }
 
     return `
@@ -345,11 +366,11 @@ function render() {
       <div class="iicon">${c.icon}</div>
       <div class="iinfo">
         <div class="iname">${c.symbol}</div>
-        <div class="iprice">${pstr} · 均价$${c.costPrice}</div>
+        <div class="iprice">${subtext}</div>
       </div>
       <div class="ival">
         <div class="ival-main">¥${cnyVal.toFixed(2)}</div>
-        <div class="itag ${c.symbol==='USDT'?'tn':colorClass}">${tagStr}</div>
+        <div class="itag ${colorClass}">${tagStr}</div>
       </div>
     </div>`;
   }).join('');
@@ -367,14 +388,17 @@ function openModal() {
           <input type="number" id="s_val_${i}" value="${s.value}" step="0.01">
         </div>
         <div class="input-group">
-          <span>涨跌幅标签</span>
+          <span>自定义涨跌幅标签</span>
           <input type="text" id="s_gain_${i}" value="${s.gain}">
         </div>
       </div>
     </div>
   `).join('');
 
-  document.getElementById('cryptoInputs').innerHTML = holdings.crypto.map((c,i) => `
+  document.getElementById('cryptoInputs').innerHTML = holdings.crypto.map((c,i) => {
+    const isUsdt = c.symbol === 'USDT';
+    const costLabel = isUsdt ? '买入均价 (¥)' : '买入均价 ($)';
+    return `
     <div class="modal-input-card">
       <label>${c.icon} ${c.symbol}</label>
       <div class="input-row">
@@ -383,12 +407,13 @@ function openModal() {
           <input type="number" id="c_qty_${i}" value="${c.qty}" step="any">
         </div>
         <div class="input-group">
-          <span>买入均价 ($)</span>
+          <span>${costLabel}</span>
           <input type="number" id="c_cost_${i}" value="${c.costPrice}" step="any">
         </div>
       </div>
     </div>
-  `).join('');
+    `;
+  }).join('');
 
   document.getElementById('inputRate').value = holdings.usdRate;
   document.getElementById('overlay').classList.add('open');
@@ -414,7 +439,7 @@ function saveAndClose() {
   const r = parseFloat(document.getElementById('inputRate').value);
   if(!isNaN(r)) holdings.usdRate = r;
 
-  localStorage.setItem('portfolio_v8', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v9', JSON.stringify(holdings));
   closeModal();
   render();
 }
