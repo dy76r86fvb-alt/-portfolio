@@ -6,6 +6,7 @@
 <title>资产监控 Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
+  /* 移除了所有 -- 变量，直接使用硬编码颜色，彻底免疫手机系统符号转义干扰 */
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; overflow-x: hidden; background: #080A0F; font-family: 'Noto Sans SC', sans-serif; }
   body { padding: 24px 16px 100px; }
@@ -25,15 +26,21 @@
   .spin { display: inline-block; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .status-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 0 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #566370; }
+  .status-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 0 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #566370; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #39FF6E; }
   
   .summary-card { 
-    background: #151A22; border-radius: 16px; padding: 24px 16px; margin-bottom: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 16px;
+    background: #151A22; 
+    border-radius: 16px; 
+    padding: 24px 16px; 
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
   .pie-wrap { position: relative; flex-shrink: 0; width: 110px; height: 110px; }
-  .pie-wrap svg { transform: rotate(-90deg); transition: all 0.5s ease-out; }
+  .pie-wrap svg { transform: rotate(-90deg); }
   .pie-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
   .pie-center .lbl { font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #566370; display: block; margin-bottom: 2px; }
   .pie-center .val { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
@@ -47,40 +54,62 @@
   .lval { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
   .lpct { font-family: 'Space Mono', monospace; font-size: 12px; flex-shrink: 0; font-weight: 700; }
 
-  .asset-card { background: #FFFFFF; border-radius: 16px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
-  .asset-card-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 16px; cursor: pointer; }
+  .asset-card { 
+    background: #FFFFFF; 
+    border-radius: 16px; 
+    margin-bottom: 12px; 
+    overflow: hidden; 
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1); 
+  }
+  .asset-card-header { 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 20px 16px; 
+    cursor: pointer;
+  }
   .asset-title { font-size: 14px; color: #1E2530; font-weight: 700; margin-bottom: 4px; }
   .asset-total { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: #1E2530; }
   .asset-pct { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; }
   .asset-chev { font-size: 10px; color: #8090A0; transition: transform 0.2s; }
+  
   .asset-card.collapsed .asset-items { display: none; }
   .asset-card.collapsed .asset-chev { transform: rotate(-90deg); }
 
   .asset-items { border-top: 1px solid #E8EEF4; padding: 0 16px; }
-  .asset-item { display: flex; align-items: center; padding: 16px 0; border-bottom: 1px solid #E8EEF4; gap: 10px; }
+  .asset-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid #E8EEF4; gap: 10px; }
   .asset-item:last-child { border-bottom: none; }
-  .iicon { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
-  .iinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-  .iname { font-size: 13px; color: #1E2530; font-weight: 600; }
+  .iicon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
+  .iinfo { flex: 1; min-width: 0; }
+  .iname { font-size: 12px; color: #1E2530; font-weight: 500; margin-bottom: 2px; }
   .iprice { font-family: 'Space Mono', monospace; font-size: 10px; color: #8090A0; }
-  .ival { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
-  .ival-main { font-family: 'Space Mono', monospace; font-size: 14px; color: #1E2530; font-weight: 700; }
-  .itag { font-family: 'Space Mono', monospace; font-size: 10px; padding: 4px 6px; border-radius: 4px; font-weight: 700; }
+  .ival { font-family: 'Space Mono', monospace; font-size: 14px; color: #1E2530; font-weight: 700; flex-shrink: 0; text-align: right; }
+  .itag { font-family: 'Space Mono', monospace; font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; }
   
-  .tg { color: #00B87A !important; background: rgba(0,229,192,0.15) !important; } 
-  .tr { color: #FF4466 !important; background: rgba(255,68,102,0.1) !important; }  
-  .tn { color: #8090A0 !important; background: #F1F4F8 !important; }             
+  .tg { color: #39FF6E !important; background: rgba(57,255,110,0.15) !important; }
+  .tr { color: #FF4466 !important; background: rgba(255,68,102,0.1) !important; }
+  .tn { color: #8090A0 !important; background: #F1F4F8 !important; }
 
   .edit-btn {
     position: fixed; bottom: 24px; right: 20px;
-    background: #00E5C0; color: #000; border: none; border-radius: 50px; padding: 14px 24px;
+    background: #00E5C0; color: #000; border: none;
+    border-radius: 50px; padding: 14px 24px;
     font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700;
-    cursor: pointer; box-shadow: 0 8px 32px rgba(0,229,192,0.4); z-index: 50; display: flex; align-items: center; gap: 8px;
+    cursor: pointer; box-shadow: 0 8px 32px rgba(0,229,192,0.4);
+    z-index: 50;
+    display: flex; align-items: center; gap: 8px;
   }
 
-  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; overflow-y: auto; padding: 10px 10px 40px; }
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); z-index: 100;
+    overflow-y: auto; padding: 10px 10px 40px;
+  }
   .overlay.open { display: block; }
-  .modal { background: #151A22; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 24px 16px; max-width: 480px; margin: 0 auto; position: relative; box-shadow: 0 16px 64px rgba(0,0,0,0.5); }
+  .modal {
+    background: #151A22; border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 20px; padding: 24px 16px; max-width: 480px; margin: 0 auto;
+    position: relative;
+    box-shadow: 0 16px 64px rgba(0,0,0,0.5);
+  }
   .modal-close { position: absolute; top: 20px; right: 20px; color: #566370; font-size: 20px; cursor: pointer; padding: 4px; }
   .modal-title { font-family: 'Space Mono', monospace; font-size: 13px; color: #00E5C0; margin-bottom: 24px; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   .modal-content { max-height: 70vh; overflow-y: auto; padding-right: 4px; }
@@ -88,17 +117,14 @@
   .modal-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
   
   .modal-sec { font-size: 11px; color: #566370; text-transform: uppercase; margin: 20px 0 12px; padding-left: 4px; letter-spacing: 1px; }
-  .modal-input-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 8px; }
-  .modal-input-card label { font-size: 12px; color: #FFFFFF; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-  
-  .input-row { display: flex; gap: 10px; }
-  .input-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-  .input-group span { font-size: 9px; color: #566370; padding-left: 2px; }
-  
+  .modal-input-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.03); }
+  .modal-input-card label { font-size: 12px; color: #FFFFFF; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
   .modal-input-card input {
-    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px; color: #fff; font-family: 'Space Mono', monospace; font-size: 12px;
-    padding: 10px 12px; outline: none; transition: border 0.2s;
+    width: 130px; flex-shrink: 0;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #fff;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    padding: 9px 12px; outline: none; text-align: right;
   }
   .modal-input-card input:focus { border-color: #00E5C0; }
   
@@ -116,7 +142,7 @@
       <span class="total-symbol">¥</span>
       <span class="total-val" id="totalDisplay">—</span>
     </div>
-    <div class="subtitle" id="lastUpdate" style="color:#566370; font-size:11px; margin-top:4px;">最后更新：正在加载...</div>
+    <div class="subtitle" id="lastUpdate">最后更新：正在加载...</div>
   </div>
   <button class="refresh-btn" onclick="fetchPrices()">
     <span id="refreshIcon">↻</span> 刷新
@@ -125,7 +151,7 @@
 
 <div class="status-bar">
   <div class="status-dot"></div>
-  <span id="statusText">正在同步实时数据...</span>
+  <span id="statusText">币圈价格实时更新 · 美股手动输入</span>
 </div>
 
 <div class="summary-card">
@@ -162,7 +188,7 @@
 
 <div class="asset-card" id="stockSection">
   <div class="asset-card-header" onclick="toggleSection('stockSection')">
-    <div>
+    <div class="shl">
       <div class="asset-title">美股基金 + 余额宝</div>
       <div class="asset-total" id="stockSectionTotal">¥—</div>
     </div>
@@ -176,7 +202,7 @@
 
 <div class="asset-card" id="cryptoSection">
   <div class="asset-card-header" onclick="toggleSection('cryptoSection')">
-    <div>
+    <div class="shl">
       <div class="asset-title">币圈资产</div>
       <div class="asset-total" id="cryptoSectionTotal">¥—</div>
     </div>
@@ -188,37 +214,35 @@
   <div class="asset-items" id="cryptoItems"></div>
 </div>
 
-<button class="edit-btn" onclick="openModal()">✎ 编辑持仓数据</button>
+<button class="edit-btn" onclick="openModal()">✎ 编辑持仓</button>
 
 <div class="overlay" id="overlay">
   <div class="modal">
     <div class="modal-close" onclick="closeModal()">✕</div>
-    <div class="modal-title">✎ 编辑持仓数据</div>
+    <div class="modal-title">✎ 编辑持仓</div>
     
     <div class="modal-content">
-      <div class="modal-sec">🇺🇸 美股基金（手动记录）</div>
+      <div class="modal-sec">🇺🇸 美股基金（人民币）</div>
       <div id="stockInputs"></div>
-      
-      <div class="modal-sec" style="margin-top:24px;">🪙 币圈持仓</div>
+      <div class="modal-sec">🪙 币圈（持币数量）</div>
       <div id="cryptoInputs"></div>
-      
-      <div class="modal-sec" style="margin-top:24px;">⚙️ 系统参数</div>
+      <div class="modal-sec">⚙️ 汇率</div>
       <div class="modal-input-card">
-        <label>💵 美元兑人民币汇率 (实时修改)</label>
+        <label>💵 美元兑人民币</label>
         <input type="number" id="inputRate" step="0.01">
       </div>
     </div>
 
     <div class="mactions">
       <button class="btn-cancel" onclick="closeModal()">取消</button>
-      <button class="btn-save" onclick="saveAndClose()">保存并刷新</button>
+      <button class="btn-save" onclick="saveAndClose()">保存</button>
     </div>
   </div>
 </div>
 
 <script>
-let defaultData = {
-  usdRate: 6.83,
+let holdings = JSON.parse(localStorage.getItem('portfolio_v2')) || {
+  usdRate: 7.24,
   stocks: [
     { name: '华安纳斯达克100 ETF', icon: '📈', value: 353.49, gain: '+7.58%' },
     { name: '摩根标普500',         icon: '📈', value: 382.59, gain: '+3.81%' },
@@ -227,68 +251,40 @@ let defaultData = {
     { name: '余额宝',              icon: '🏦', value: 30.55,  gain: '活期'   },
   ],
   crypto: [
-    { symbol: 'BTC',   icon: '₿',  qty: 0.00044249,  costPrice: 71229 },
-    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.00649104,  costPrice: 2259  },
-    { symbol: 'USDT',  icon: '💵', qty: 30.96545124, costPrice: 7.20  }, // USDT 存的是人民币成本
-    { symbol: 'SOL',   icon: '◎',  qty: 0.11253588,  costPrice: 87.63 },
-    { symbol: 'BNB',   icon: '🔶', qty: 0.01015393,  costPrice: 607.9 },
-    { symbol: 'PEPE',  icon: '🐸', qty: 1482370.578, costPrice: 0.00000337 },
-    { symbol: 'PENGU', icon: '🐧', qty: 642.509,     costPrice: 0.007924  },
-    { symbol: 'AAVE',  icon: '👻', qty: 0.05195041,  costPrice: 97.58 },
-    { symbol: 'DOGE',  icon: '🐕', qty: 26.97437279, costPrice: 0.0905 },
+    { symbol: 'BTC',   icon: '₿',  qty: 0.00044249   },
+    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.00649104   },
+    { symbol: 'USDT',  icon: '💵', qty: 30.96545124  },
+    { symbol: 'SOL',   icon: '◎',  qty: 0.11253588   },
+    { symbol: 'BNB',   icon: '🔶', qty: 0.01015393   },
+    { symbol: 'PEPE',  icon: '🐸', qty: 1482370.578  },
+    { symbol: 'PENGU', icon: '🐧', qty: 642.509      },
+    { symbol: 'AAVE',  icon: '👻', qty: 0.05195041   },
+    { symbol: 'DOGE',  icon: '🐕', qty: 26.97437279  },
   ]
 };
-
-// 升级到 v9：专为 USDT 人民币计价升级
-let holdings = JSON.parse(localStorage.getItem('portfolio_v9'));
-
-if (!holdings) {
-  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v8'));
-  if(oldHoldings) {
-    holdings = oldHoldings;
-    holdings.crypto.forEach(c => {
-      // 迁移时把 USDT 的旧成本1改成7.20，防止报错
-      if(c.symbol === 'USDT' && c.costPrice === 1) c.costPrice = 7.20;
-    });
-  } else {
-    holdings = defaultData;
-  }
-  localStorage.setItem('portfolio_v9', JSON.stringify(holdings));
-}
 
 let prices = {};
 
 async function fetchPrices() {
   const refreshIcon = document.getElementById('refreshIcon');
   refreshIcon.classList.add('spin');
-  document.getElementById('statusText').textContent = "正在通过 API 拉取币圈最新价...";
-  
   const nonStable = holdings.crypto.filter(c => c.symbol !== 'USDT');
   try {
     const results = await Promise.all(nonStable.map(c => fetch(`https://www.okx.com/api/v5/market/ticker?instId=${c.symbol}-USDT`).then(r => r.json()).catch(() => null)));
     results.forEach((r, i) => { if (r && r.data && r.data[0]) prices[nonStable[i].symbol] = parseFloat(r.data[0].last); });
+    prices['USDT'] = 1;
     const now = new Date();
     document.getElementById('lastUpdate').textContent = `最后更新：${now.toTimeString().split(' ')[0]}`;
-    document.getElementById('statusText').textContent = "数据已同步 · 每30秒自动刷新";
-  } catch(e) {
-    document.getElementById('statusText').textContent = "API 请求受限，部分价格可能滞后";
-  }
+  } catch(e) {}
   refreshIcon.classList.remove('spin');
   render();
 }
 
 function render() {
   const rate = holdings.usdRate;
-  
-  let stockTotal = 0;
-  holdings.stocks.forEach(s => { stockTotal += s.value; });
-  
+  const stockTotal = holdings.stocks.reduce((s, x) => s + x.value, 0);
   let cryptoTotal = 0;
-  holdings.crypto.forEach(c => { 
-    const p = c.symbol === 'USDT' ? 1 : (prices[c.symbol] || 0);
-    cryptoTotal += c.qty * p * rate; 
-  });
-
+  holdings.crypto.forEach(c => cryptoTotal += c.qty * (prices[c.symbol] || 0) * rate);
   const grand = stockTotal + cryptoTotal;
   const sp = grand ? (stockTotal / grand * 100).toFixed(1) : 0;
   const cp = grand ? (cryptoTotal / grand * 100).toFixed(1) : 0;
@@ -311,66 +307,31 @@ function render() {
   document.getElementById('pieCrypto').setAttribute('stroke-dasharray', `${ca} ${C}`);
   document.getElementById('pieCrypto').setAttribute('stroke-dashoffset', `-${sa}`);
 
-  document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => {
-    let colorClass = 'tn';
-    if (s.gain.includes('+')) colorClass = 'tg';
-    else if (s.gain.includes('-')) colorClass = 'tr';
-    
-    return `
+  document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => `
     <div class="asset-item">
       <div class="iicon">${s.icon}</div>
       <div class="iinfo"><div class="iname">${s.name}</div></div>
-      <div class="ival" style="flex-direction:row; align-items:center; gap:8px;">
-        <div class="ival-main">¥${s.value.toFixed(2)}</div>
-        <span class="itag ${colorClass}">${s.gain}</span>
+      <div class="ival">
+        <div>¥${s.value.toFixed(2)}</div>
+        <span class="itag ${s.gain.includes('+') ? 'tg' : (s.gain.includes('%')?'tr':'tn')}">${s.gain}</span>
       </div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 
   document.getElementById('cryptoItems').innerHTML = holdings.crypto.map(c => {
-    const isUsdt = c.symbol === 'USDT';
-    const p = isUsdt ? 1 : (prices[c.symbol] || 0);
-    const usdVal = c.qty * p;
-    const cnyVal = usdVal * rate;
-    
-    let gainCny = 0;
-    let gainPct = 0;
-    let subtext = '';
-
-    if (isUsdt) {
-      // USDT 特殊逻辑：用人民币现值 - 人民币买入成本
-      const costCny = c.qty * c.costPrice; 
-      gainCny = cnyVal - costCny;
-      gainPct = costCny > 0 ? (gainCny / costCny * 100) : 0;
-      subtext = `实时¥${rate.toFixed(2)} · 成本¥${c.costPrice}`;
-    } else {
-      // 常规币种：计算美元浮盈后折算为人民币
-      const costUsd = c.qty * c.costPrice;
-      const gainU = usdVal - costUsd;
-      gainCny = gainU * rate;
-      gainPct = costUsd > 0 ? (gainU / costUsd * 100) : 0;
-      subtext = `$${p < 1 ? p.toFixed(6) : p.toLocaleString()} · 成本$${c.costPrice}`;
-    }
-    
-    // 强制判断符号（大于或小于 0.005 才显示符号，避免 -0.00¥ 的诡异情况）
-    const sign = gainCny > 0.005 ? '+' : (gainCny < -0.005 ? '-' : ''); 
-    const colorClass = gainCny > 0.01 ? 'tg' : (gainCny < -0.01 ? 'tr' : 'tn');
-    
-    let tagStr = '获取中...';
-    if(p > 0) {
-      tagStr = `${sign}${Math.abs(gainCny).toFixed(2)}¥ (${sign}${Math.abs(gainPct).toFixed(2)}%)`;
-    }
-
+    const p = prices[c.symbol] || 0;
+    const usd = c.qty * p;
+    const cny = usd * rate;
+    const pstr = p > 0 ? (c.symbol === 'USDT' ? '¥' + rate.toFixed(2) : '$' + (p < 1 ? p.toFixed(6) : p.toLocaleString())) : '获取中...';
     return `
     <div class="asset-item">
       <div class="iicon">${c.icon}</div>
       <div class="iinfo">
         <div class="iname">${c.symbol}</div>
-        <div class="iprice">${subtext}</div>
+        <div class="iprice">${pstr}</div>
       </div>
       <div class="ival">
-        <div class="ival-main">¥${cnyVal.toFixed(2)}</div>
-        <div class="itag ${colorClass}">${tagStr}</div>
+        <div>¥${cny.toFixed(2)}</div>
+        <div class="iprice">${usd.toFixed(2)}U</div>
       </div>
     </div>`;
   }).join('');
@@ -379,42 +340,12 @@ function render() {
 function toggleSection(id) { document.getElementById(id).classList.toggle('collapsed'); }
 
 function openModal() {
-  document.getElementById('stockInputs').innerHTML = holdings.stocks.map((s,i) => `
-    <div class="modal-input-card">
-      <label>${s.icon} ${s.name}</label>
-      <div class="input-row">
-        <div class="input-group">
-          <span>现值金额 (¥)</span>
-          <input type="number" id="s_val_${i}" value="${s.value}" step="0.01">
-        </div>
-        <div class="input-group">
-          <span>自定义涨跌幅标签</span>
-          <input type="text" id="s_gain_${i}" value="${s.gain}">
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  document.getElementById('cryptoInputs').innerHTML = holdings.crypto.map((c,i) => {
-    const isUsdt = c.symbol === 'USDT';
-    const costLabel = isUsdt ? '买入均价 (¥)' : '买入均价 ($)';
-    return `
-    <div class="modal-input-card">
-      <label>${c.icon} ${c.symbol}</label>
-      <div class="input-row">
-        <div class="input-group">
-          <span>持币数量</span>
-          <input type="number" id="c_qty_${i}" value="${c.qty}" step="any">
-        </div>
-        <div class="input-group">
-          <span>${costLabel}</span>
-          <input type="number" id="c_cost_${i}" value="${c.costPrice}" step="any">
-        </div>
-      </div>
-    </div>
-    `;
-  }).join('');
-
+  document.getElementById('stockInputs').innerHTML = holdings.stocks.map((s,i) =>
+    `<div class="modal-input-card"><label>${s.icon} ${s.name}</label><input type="number" id="s${i}" value="${s.value}" step="0.01"></div>`
+  ).join('');
+  document.getElementById('cryptoInputs').innerHTML = holdings.crypto.map((c,i) =>
+    `<div class="modal-input-card"><label>${c.icon} ${c.symbol}</label><input type="number" id="c${i}" value="${c.qty}" step="any"></div>`
+  ).join('');
   document.getElementById('inputRate').value = holdings.usdRate;
   document.getElementById('overlay').classList.add('open');
 }
@@ -422,24 +353,11 @@ function openModal() {
 function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 
 function saveAndClose() {
-  holdings.stocks.forEach((s,i) => { 
-    const v = parseFloat(document.getElementById(`s_val_${i}`).value); 
-    const g = document.getElementById(`s_gain_${i}`).value;
-    if(!isNaN(v)) s.value = v; 
-    s.gain = g; 
-  });
-  
-  holdings.crypto.forEach((c,i) => { 
-    const q = parseFloat(document.getElementById(`c_qty_${i}`).value); 
-    const cp = parseFloat(document.getElementById(`c_cost_${i}`).value);
-    if(!isNaN(q)) c.qty = q; 
-    if(!isNaN(cp)) c.costPrice = cp; 
-  });
-
+  holdings.stocks.forEach((s,i) => { const v = parseFloat(document.getElementById(`s${i}`).value); if(!isNaN(v)) s.value = v; });
+  holdings.crypto.forEach((c,i) => { const v = parseFloat(document.getElementById(`c${i}`).value); if(!isNaN(v)) c.qty = v; });
   const r = parseFloat(document.getElementById('inputRate').value);
   if(!isNaN(r)) holdings.usdRate = r;
-
-  localStorage.setItem('portfolio_v9', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v2', JSON.stringify(holdings));
   closeModal();
   render();
 }
