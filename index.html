@@ -6,7 +6,7 @@
 <title>资产监控 Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
-  /* 移除了所有 -- 变量，直接使用硬编码颜色，彻底免疫手机系统符号转义干扰 */
+  /* 纯净版：绝对颜色，无 -- 变量 */
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; overflow-x: hidden; background: #080A0F; font-family: 'Noto Sans SC', sans-serif; }
   body { padding: 24px 16px 100px; }
@@ -30,17 +30,11 @@
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #39FF6E; }
   
   .summary-card { 
-    background: #151A22; 
-    border-radius: 16px; 
-    padding: 24px 16px; 
-    margin-bottom: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    background: #151A22; border-radius: 16px; padding: 24px 16px; margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 16px;
   }
   .pie-wrap { position: relative; flex-shrink: 0; width: 110px; height: 110px; }
-  .pie-wrap svg { transform: rotate(-90deg); }
+  .pie-wrap svg { transform: rotate(-90deg); transition: all 0.5s ease-out; }
   .pie-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
   .pie-center .lbl { font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #566370; display: block; margin-bottom: 2px; }
   .pie-center .val { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
@@ -54,23 +48,12 @@
   .lval { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
   .lpct { font-family: 'Space Mono', monospace; font-size: 12px; flex-shrink: 0; font-weight: 700; }
 
-  .asset-card { 
-    background: #FFFFFF; 
-    border-radius: 16px; 
-    margin-bottom: 12px; 
-    overflow: hidden; 
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1); 
-  }
-  .asset-card-header { 
-    display: flex; align-items: center; justify-content: space-between; 
-    padding: 20px 16px; 
-    cursor: pointer;
-  }
+  .asset-card { background: #FFFFFF; border-radius: 16px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .asset-card-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 16px; cursor: pointer; }
   .asset-title { font-size: 14px; color: #1E2530; font-weight: 700; margin-bottom: 4px; }
   .asset-total { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: #1E2530; }
   .asset-pct { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; }
   .asset-chev { font-size: 10px; color: #8090A0; transition: transform 0.2s; }
-  
   .asset-card.collapsed .asset-items { display: none; }
   .asset-card.collapsed .asset-chev { transform: rotate(-90deg); }
 
@@ -90,26 +73,14 @@
 
   .edit-btn {
     position: fixed; bottom: 24px; right: 20px;
-    background: #00E5C0; color: #000; border: none;
-    border-radius: 50px; padding: 14px 24px;
+    background: #00E5C0; color: #000; border: none; border-radius: 50px; padding: 14px 24px;
     font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700;
-    cursor: pointer; box-shadow: 0 8px 32px rgba(0,229,192,0.4);
-    z-index: 50;
-    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; box-shadow: 0 8px 32px rgba(0,229,192,0.4); z-index: 50; display: flex; align-items: center; gap: 8px;
   }
 
-  .overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85); z-index: 100;
-    overflow-y: auto; padding: 10px 10px 40px;
-  }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; overflow-y: auto; padding: 10px 10px 40px; }
   .overlay.open { display: block; }
-  .modal {
-    background: #151A22; border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 20px; padding: 24px 16px; max-width: 480px; margin: 0 auto;
-    position: relative;
-    box-shadow: 0 16px 64px rgba(0,0,0,0.5);
-  }
+  .modal { background: #151A22; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 24px 16px; max-width: 480px; margin: 0 auto; position: relative; box-shadow: 0 16px 64px rgba(0,0,0,0.5); }
   .modal-close { position: absolute; top: 20px; right: 20px; color: #566370; font-size: 20px; cursor: pointer; padding: 4px; }
   .modal-title { font-family: 'Space Mono', monospace; font-size: 13px; color: #00E5C0; margin-bottom: 24px; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   .modal-content { max-height: 70vh; overflow-y: auto; padding-right: 4px; }
@@ -122,8 +93,7 @@
   .modal-input-card input {
     width: 130px; flex-shrink: 0;
     background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px; color: #fff;
-    font-family: 'Space Mono', monospace; font-size: 12px;
+    border-radius: 8px; color: #fff; font-family: 'Space Mono', monospace; font-size: 12px;
     padding: 9px 12px; outline: none; text-align: right;
   }
   .modal-input-card input:focus { border-color: #00E5C0; }
@@ -222,7 +192,7 @@
     <div class="modal-title">✎ 编辑持仓</div>
     
     <div class="modal-content">
-      <div class="modal-sec">🇺🇸 美股基金（人民币）</div>
+      <div class="modal-sec">🇺🇸 美股基金（现值与涨跌幅）</div>
       <div id="stockInputs"></div>
       <div class="modal-sec">🪙 币圈（持币数量）</div>
       <div id="cryptoInputs"></div>
@@ -241,7 +211,7 @@
 </div>
 
 <script>
-let holdings = JSON.parse(localStorage.getItem('portfolio_v2')) || {
+let defaultData = {
   usdRate: 7.24,
   stocks: [
     { name: '华安纳斯达克100 ETF', icon: '📈', value: 353.49, gain: '+7.58%' },
@@ -262,6 +232,13 @@ let holdings = JSON.parse(localStorage.getItem('portfolio_v2')) || {
     { symbol: 'DOGE',  icon: '🐕', qty: 26.97437279  },
   ]
 };
+
+// 使用新存储名称防止格式冲突
+let holdings = JSON.parse(localStorage.getItem('portfolio_pro_pure'));
+if (!holdings) {
+  holdings = defaultData;
+  localStorage.setItem('portfolio_pro_pure', JSON.stringify(holdings));
+}
 
 let prices = {};
 
@@ -307,15 +284,22 @@ function render() {
   document.getElementById('pieCrypto').setAttribute('stroke-dasharray', `${ca} ${C}`);
   document.getElementById('pieCrypto').setAttribute('stroke-dashoffset', `-${sa}`);
 
-  document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => `
+  document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => {
+    // 智能识别符号确定颜色
+    let colorClass = 'tn';
+    if (s.gain.includes('+')) colorClass = 'tg';
+    else if (s.gain.includes('-')) colorClass = 'tr';
+    
+    return `
     <div class="asset-item">
       <div class="iicon">${s.icon}</div>
       <div class="iinfo"><div class="iname">${s.name}</div></div>
-      <div class="ival">
-        <div>¥${s.value.toFixed(2)}</div>
-        <span class="itag ${s.gain.includes('+') ? 'tg' : (s.gain.includes('%')?'tr':'tn')}">${s.gain}</span>
+      <div class="ival" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #1E2530;">¥${s.value.toFixed(2)}</div>
+        <span class="itag ${colorClass}">${s.gain}</span>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   document.getElementById('cryptoItems').innerHTML = holdings.crypto.map(c => {
     const p = prices[c.symbol] || 0;
@@ -329,9 +313,9 @@ function render() {
         <div class="iname">${c.symbol}</div>
         <div class="iprice">${pstr}</div>
       </div>
-      <div class="ival">
-        <div>¥${cny.toFixed(2)}</div>
-        <div class="iprice">${usd.toFixed(2)}U</div>
+      <div class="ival" style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #1E2530;">¥${cny.toFixed(2)}</div>
+        <div class="iprice" style="font-family: 'Space Mono', monospace; font-size: 10px; color: #8090A0; font-weight: bold;">${usd.toFixed(2)}U</div>
       </div>
     </div>`;
   }).join('');
@@ -340,9 +324,23 @@ function render() {
 function toggleSection(id) { document.getElementById(id).classList.toggle('collapsed'); }
 
 function openModal() {
-  document.getElementById('stockInputs').innerHTML = holdings.stocks.map((s,i) =>
-    `<div class="modal-input-card"><label>${s.icon} ${s.name}</label><input type="number" id="s${i}" value="${s.value}" step="0.01"></div>`
-  ).join('');
+  // 美股输入框升级为上下两行
+  document.getElementById('stockInputs').innerHTML = holdings.stocks.map((s,i) => `
+    <div class="modal-input-card" style="flex-direction: column; align-items: stretch; gap: 8px;">
+      <label>${s.icon} ${s.name}</label>
+      <div style="display: flex; gap: 10px;">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 9px; color: #566370; padding-left: 2px;">现值 (¥)</span>
+          <input type="number" id="s_val_${i}" value="${s.value}" step="0.01" style="width: 100%;">
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 9px; color: #566370; padding-left: 2px;">涨跌幅</span>
+          <input type="text" id="s_gain_${i}" value="${s.gain}" placeholder="+0.00%" style="width: 100%;">
+        </div>
+      </div>
+    </div>
+  `).join('');
+
   document.getElementById('cryptoInputs').innerHTML = holdings.crypto.map((c,i) =>
     `<div class="modal-input-card"><label>${c.icon} ${c.symbol}</label><input type="number" id="c${i}" value="${c.qty}" step="any"></div>`
   ).join('');
@@ -353,11 +351,17 @@ function openModal() {
 function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 
 function saveAndClose() {
-  holdings.stocks.forEach((s,i) => { const v = parseFloat(document.getElementById(`s${i}`).value); if(!isNaN(v)) s.value = v; });
+  holdings.stocks.forEach((s,i) => { 
+    const v = parseFloat(document.getElementById(`s_val_${i}`).value); 
+    if(!isNaN(v)) s.value = v; 
+    s.gain = document.getElementById(`s_gain_${i}`).value || '';
+  });
+  
   holdings.crypto.forEach((c,i) => { const v = parseFloat(document.getElementById(`c${i}`).value); if(!isNaN(v)) c.qty = v; });
   const r = parseFloat(document.getElementById('inputRate').value);
   if(!isNaN(r)) holdings.usdRate = r;
-  localStorage.setItem('portfolio_v2', JSON.stringify(holdings));
+  
+  localStorage.setItem('portfolio_pro_pure', JSON.stringify(holdings));
   closeModal();
   render();
 }
