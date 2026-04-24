@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>资产监控 Pro Max</title>
+<title>资产监控 Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; overflow-x: hidden; background: #080A0F; font-family: 'Noto Sans SC', sans-serif; }
@@ -29,14 +28,6 @@
   .status-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 0 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #566370; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #39FF6E; }
   
-  /* 走势图卡片 */
-  .chart-card {
-    background: #151A22; border-radius: 16px; padding: 16px; margin-bottom: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  }
-  .chart-header { font-size: 12px; color: #8090A0; margin-bottom: 12px; display: flex; justify-content: space-between; }
-  .chart-header span:last-child { color: #00E5C0; font-family: 'Space Mono'; }
-
   .summary-card { 
     background: #151A22; border-radius: 16px; padding: 24px 16px; margin-bottom: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 16px;
@@ -76,9 +67,9 @@
   .ival-main { font-family: 'Space Mono', monospace; font-size: 14px; color: #1E2530; font-weight: 700; }
   .itag { font-family: 'Space Mono', monospace; font-size: 10px; padding: 4px 6px; border-radius: 4px; font-weight: 700; }
   
-  .tg { color: #00B87A !important; background: rgba(0,229,192,0.15) !important; } /* 盈利绿 */
-  .tr { color: #FF4466 !important; background: rgba(255,68,102,0.1) !important; }  /* 亏损红 */
-  .tn { color: #8090A0 !important; background: #F1F4F8 !important; }             /* 零平灰 */
+  .tg { color: #00B87A !important; background: rgba(0,229,192,0.15) !important; } 
+  .tr { color: #FF4466 !important; background: rgba(255,68,102,0.1) !important; }  
+  .tn { color: #8090A0 !important; background: #F1F4F8 !important; }             
 
   .edit-btn {
     position: fixed; bottom: 24px; right: 20px;
@@ -144,16 +135,6 @@
 <div class="status-bar">
   <div class="status-dot"></div>
   <span id="statusText">正在同步实时数据...</span>
-</div>
-
-<div class="chart-card">
-  <div class="chart-header">
-    <span>📈 近30天净资产走势</span>
-    <span id="trendPnl">+0.00%</span>
-  </div>
-  <div style="height: 120px; width: 100%;">
-    <canvas id="historyChart"></canvas>
-  </div>
 </div>
 
 <div class="summary-card">
@@ -227,7 +208,7 @@
       <div class="modal-sec">🇺🇸 美股基金（手动输入金额）</div>
       <div id="stockInputs"></div>
       
-      <div class="modal-sec" style="margin-top:24px;">🪙 币圈（输入持仓量与买入成本价）</div>
+      <div class="modal-sec" style="margin-top:24px;">🪙 币圈（输入持仓量与买入均价）</div>
       <div id="cryptoInputs"></div>
       
       <div class="modal-sec" style="margin-top:24px;">⚙️ 系统参数</div>
@@ -247,9 +228,7 @@
 <script>
 let defaultData = {
   usdRate: 7.24,
-  history: [], 
   stocks: [
-    // 恢复美股的原始结构，移除 cost
     { name: '华安纳斯达克100 ETF', icon: '📈', value: 353.49, gain: '+7.58%' },
     { name: '摩根标普500',         icon: '📈', value: 382.59, gain: '+3.81%' },
     { name: '广发纳斯达克100 ETF', icon: '📈', value: 108.13, gain: '+8.13%' },
@@ -269,84 +248,26 @@ let defaultData = {
   ]
 };
 
-// 升级到 v4，清洗之前的实验数据
-let holdings = JSON.parse(localStorage.getItem('portfolio_v4'));
+// 升级到 v6：清理掉图表历史数据的残留，保证存储空间极致干净
+let holdings = JSON.parse(localStorage.getItem('portfolio_v6'));
 
 if (!holdings) {
-  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v3')) || JSON.parse(localStorage.getItem('portfolio_v2'));
+  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v5')) || JSON.parse(localStorage.getItem('portfolio_v4'));
   if(oldHoldings) {
     holdings = oldHoldings;
-    if(!holdings.history) holdings.history = [];
-    // 将美股数据恢复成原样
+    delete holdings.history; // 删掉不要的历史记录
     holdings.stocks.forEach((s, i) => { 
       s.gain = defaultData.stocks[i]?.gain || '+0.00%'; 
       delete s.cost; 
     });
-    // 确保币圈保留成本
     holdings.crypto.forEach((c, i) => { if(c.costPrice === undefined) c.costPrice = defaultData.crypto[i]?.costPrice || 0; });
   } else {
     holdings = defaultData;
   }
-  localStorage.setItem('portfolio_v4', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v6', JSON.stringify(holdings));
 }
 
 let prices = {};
-let myChart = null;
-
-function drawChart(grandTotal) {
-  if (!holdings.history || holdings.history.length === 0) {
-      holdings.history = [];
-      let base = grandTotal * 0.95; 
-      for(let i=7; i>0; i--) {
-          let d = new Date(); d.setDate(d.getDate() - i);
-          holdings.history.push({ date: d.toISOString().split('T')[0], total: base + (Math.random() * grandTotal * 0.05) });
-      }
-  }
-
-  const todayStr = new Date().toISOString().split('T')[0];
-  const existingIdx = holdings.history.findIndex(h => h.date === todayStr);
-  if(existingIdx >= 0) { holdings.history[existingIdx].total = grandTotal; } 
-  else { holdings.history.push({ date: todayStr, total: grandTotal }); }
-  if(holdings.history.length > 30) holdings.history.shift();
-
-  const oldest = holdings.history[0].total;
-  const trendPct = ((grandTotal - oldest) / oldest * 100).toFixed(2);
-  const trendEl = document.getElementById('trendPnl');
-  trendEl.textContent = (trendPct >= 0 ? '+' : '') + trendPct + '%';
-  trendEl.style.color = trendPct >= 0 ? '#00E5C0' : '#FF4466';
-
-  const labels = holdings.history.map(h => h.date.substring(5));
-  const data = holdings.history.map(h => Math.round(h.total));
-
-  const ctx = document.getElementById('historyChart').getContext('2d');
-  
-  if (myChart) {
-    myChart.data.labels = labels;
-    myChart.data.datasets[0].data = data;
-    myChart.update();
-  } else {
-    let gradient = ctx.createLinearGradient(0, 0, 0, 120);
-    gradient.addColorStop(0, 'rgba(0, 229, 192, 0.4)');
-    gradient.addColorStop(1, 'rgba(0, 229, 192, 0)');
-
-    myChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data, borderColor: '#00E5C0', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
-          backgroundColor: gradient, fill: true, tension: 0.4
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-        scales: { x: { display: false }, y: { display: false, min: Math.min(...data) * 0.98 } },
-        interaction: { mode: 'nearest', axis: 'x', intersect: false }
-      }
-    });
-  }
-}
 
 async function fetchPrices() {
   const refreshIcon = document.getElementById('refreshIcon');
@@ -399,9 +320,6 @@ function render() {
   document.getElementById('pieCrypto').setAttribute('stroke-dasharray', `${ca} ${C}`);
   document.getElementById('pieCrypto').setAttribute('stroke-dashoffset', `-${sa}`);
 
-  drawChart(grand);
-
-  // 恢复美股列表的原版展示（读死标签数据）
   document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => {
     const isG = s.gain.includes('+');
     const colorClass = isG ? 'tg' : (s.gain.includes('%') ? 'tr' : 'tn');
@@ -416,7 +334,6 @@ function render() {
     </div>`;
   }).join('');
 
-  // 币圈列表保留动态盈亏计算
   document.getElementById('cryptoItems').innerHTML = holdings.crypto.map(c => {
     const p = prices[c.symbol] || 0;
     const usdVal = c.qty * p;
@@ -458,7 +375,6 @@ function render() {
 function toggleSection(id) { document.getElementById(id).classList.toggle('collapsed'); }
 
 function openModal() {
-  // 美股恢复成单行输入模式
   document.getElementById('stockInputs').innerHTML = holdings.stocks.map((s,i) => `
     <div class="modal-input-card modal-input-row">
       <label>${s.icon} ${s.name}</label>
@@ -466,7 +382,6 @@ function openModal() {
     </div>
   `).join('');
 
-  // 币圈保留双行输入模式
   document.getElementById('cryptoInputs').innerHTML = holdings.crypto.map((c,i) => `
     <div class="modal-input-card">
       <label>${c.icon} ${c.symbol}</label>
@@ -490,13 +405,11 @@ function openModal() {
 function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 
 function saveAndClose() {
-  // 只保存美股现值
   holdings.stocks.forEach((s,i) => { 
     const v = parseFloat(document.getElementById(`s_val_${i}`).value); 
     if(!isNaN(v)) s.value = v; 
   });
   
-  // 保存币圈现值和成本
   holdings.crypto.forEach((c,i) => { 
     const q = parseFloat(document.getElementById(`c_qty_${i}`).value); 
     const cp = parseFloat(document.getElementById(`c_cost_${i}`).value);
@@ -507,7 +420,7 @@ function saveAndClose() {
   const r = parseFloat(document.getElementById('inputRate').value);
   if(!isNaN(r)) holdings.usdRate = r;
 
-  localStorage.setItem('portfolio_v4', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v6', JSON.stringify(holdings));
   closeModal();
   render();
 }
