@@ -248,14 +248,14 @@ let defaultData = {
   ]
 };
 
-// 升级到 v6：清理掉图表历史数据的残留，保证存储空间极致干净
-let holdings = JSON.parse(localStorage.getItem('portfolio_v6'));
+// 升到 v7：防止缓存干扰，直接更新数据架构
+let holdings = JSON.parse(localStorage.getItem('portfolio_v7'));
 
 if (!holdings) {
-  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v5')) || JSON.parse(localStorage.getItem('portfolio_v4'));
+  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v6')) || JSON.parse(localStorage.getItem('portfolio_v5'));
   if(oldHoldings) {
     holdings = oldHoldings;
-    delete holdings.history; // 删掉不要的历史记录
+    delete holdings.history;
     holdings.stocks.forEach((s, i) => { 
       s.gain = defaultData.stocks[i]?.gain || '+0.00%'; 
       delete s.cost; 
@@ -264,7 +264,7 @@ if (!holdings) {
   } else {
     holdings = defaultData;
   }
-  localStorage.setItem('portfolio_v6', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v7', JSON.stringify(holdings));
 }
 
 let prices = {};
@@ -321,8 +321,10 @@ function render() {
   document.getElementById('pieCrypto').setAttribute('stroke-dashoffset', `-${sa}`);
 
   document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => {
-    const isG = s.gain.includes('+');
-    const colorClass = isG ? 'tg' : (s.gain.includes('%') ? 'tr' : 'tn');
+    let colorClass = 'tn';
+    if (s.gain.includes('+')) colorClass = 'tg';
+    else if (s.gain.includes('-')) colorClass = 'tr';
+    
     return `
     <div class="asset-item">
       <div class="iicon">${s.icon}</div>
@@ -341,9 +343,12 @@ function render() {
     
     const costUsd = c.qty * c.costPrice;
     const gainU = usdVal - costUsd;
-    const gainPct = c.costPrice > 0 ? (gainU / costUsd * 100) : 0;
-    const sign = gainU > 0 ? '+' : '';
-    const colorClass = gainU > 0.01 ? 'tg' : (gainU < -0.01 ? 'tr' : 'tn');
+    const gainCny = gainU * rate;
+    const gainPct = costUsd > 0 ? (gainU / costUsd * 100) : 0;
+    
+    // 判断正负号和颜色 (超过一点点误差才算盈亏)
+    const sign = gainCny > 0.005 ? '+' : (gainCny < -0.005 ? '-' : '');
+    const colorClass = gainCny > 0.01 ? 'tg' : (gainCny < -0.01 ? 'tr' : 'tn');
     
     let tagStr = '获取中...';
     let pstr = '...';
@@ -352,7 +357,8 @@ function render() {
          tagStr = '= ¥' + rate.toFixed(2);
          pstr = '$1.00';
       } else {
-         tagStr = `${sign}${Math.abs(gainU).toFixed(1)}U (${sign}${gainPct.toFixed(1)}%)`;
+         // 强制保留两位小数，并用人民币¥作为单位
+         tagStr = `${sign}${Math.abs(gainCny).toFixed(2)}¥ (${sign}${Math.abs(gainPct).toFixed(2)}%)`;
          pstr = '$' + (p < 1 ? p.toFixed(6) : p.toLocaleString());
       }
     }
@@ -420,7 +426,7 @@ function saveAndClose() {
   const r = parseFloat(document.getElementById('inputRate').value);
   if(!isNaN(r)) holdings.usdRate = r;
 
-  localStorage.setItem('portfolio_v6', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v7', JSON.stringify(holdings));
   closeModal();
   render();
 }
