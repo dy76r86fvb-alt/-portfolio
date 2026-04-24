@@ -91,19 +91,10 @@
   .modal-input-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 8px; }
   .modal-input-card label { font-size: 12px; color: #FFFFFF; font-weight: 600; display: flex; align-items: center; gap: 8px; }
   
-  .modal-input-row { display: flex; align-items: center; gap: 12px; flex-direction: row !important; }
-  .modal-input-row label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .modal-input-row input {
-    width: 120px; flex-shrink: 0;
-    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px; color: #fff; font-family: 'Space Mono', monospace; font-size: 12px;
-    padding: 10px 12px; outline: none; text-align: right; transition: border 0.2s;
-  }
-  .modal-input-row input:focus { border-color: #00E5C0; }
-
   .input-row { display: flex; gap: 10px; }
   .input-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
   .input-group span { font-size: 9px; color: #566370; padding-left: 2px; }
+  
   .modal-input-card input {
     width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px; color: #fff; font-family: 'Space Mono', monospace; font-size: 12px;
@@ -205,29 +196,29 @@
     <div class="modal-title">✎ 编辑持仓数据</div>
     
     <div class="modal-content">
-      <div class="modal-sec">🇺🇸 美股基金（手动输入金额）</div>
+      <div class="modal-sec">🇺🇸 美股基金（手动记录）</div>
       <div id="stockInputs"></div>
       
-      <div class="modal-sec" style="margin-top:24px;">🪙 币圈（输入持仓量与买入均价）</div>
+      <div class="modal-sec" style="margin-top:24px;">🪙 币圈（自动计算盈亏）</div>
       <div id="cryptoInputs"></div>
       
       <div class="modal-sec" style="margin-top:24px;">⚙️ 系统参数</div>
-      <div class="modal-input-card modal-input-row">
-        <label>💵 美元兑人民币汇率</label>
+      <div class="modal-input-card">
+        <label>美元兑人民币汇率</label>
         <input type="number" id="inputRate" step="0.01">
       </div>
     </div>
 
     <div class="mactions">
       <button class="btn-cancel" onclick="closeModal()">取消</button>
-      <button class="btn-save" onclick="saveAndClose()">保存并重新计算</button>
+      <button class="btn-save" onclick="saveAndClose()">保存并刷新</button>
     </div>
   </div>
 </div>
 
 <script>
 let defaultData = {
-  usdRate: 7.24,
+  usdRate: 6.83,
   stocks: [
     { name: '华安纳斯达克100 ETF', icon: '📈', value: 353.49, gain: '+7.58%' },
     { name: '摩根标普500',         icon: '📈', value: 382.59, gain: '+3.81%' },
@@ -236,35 +227,23 @@ let defaultData = {
     { name: '余额宝',              icon: '🏦', value: 30.55,  gain: '活期'   },
   ],
   crypto: [
-    { symbol: 'BTC',   icon: '₿',  qty: 0.00044249,  costPrice: 62000 },
-    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.00649104,  costPrice: 3100  },
+    { symbol: 'BTC',   icon: '₿',  qty: 0.00044249,  costPrice: 71229 },
+    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.00649104,  costPrice: 2259  },
     { symbol: 'USDT',  icon: '💵', qty: 30.96545124, costPrice: 1     },
-    { symbol: 'SOL',   icon: '◎',  qty: 0.11253588,  costPrice: 150   },
-    { symbol: 'BNB',   icon: '🔶', qty: 0.01015393,  costPrice: 550   },
-    { symbol: 'PEPE',  icon: '🐸', qty: 1482370.578, costPrice: 0.000008 },
-    { symbol: 'PENGU', icon: '🐧', qty: 642.509,     costPrice: 0.04  },
-    { symbol: 'AAVE',  icon: '👻', qty: 0.05195041,  costPrice: 100   },
-    { symbol: 'DOGE',  icon: '🐕', qty: 26.97437279, costPrice: 0.15  },
+    { symbol: 'SOL',   icon: '◎',  qty: 0.11253588,  costPrice: 87.63 },
+    { symbol: 'BNB',   icon: '🔶', qty: 0.01015393,  costPrice: 607.9 },
+    { symbol: 'PEPE',  icon: '🐸', qty: 1482370.578, costPrice: 0.00000337 },
+    { symbol: 'PENGU', icon: '🐧', qty: 642.509,     costPrice: 0.007924  },
+    { symbol: 'AAVE',  icon: '👻', qty: 0.05195041,  costPrice: 97.58 },
+    { symbol: 'DOGE',  icon: '🐕', qty: 26.97437279, costPrice: 0.0905 },
   ]
 };
 
-// 升到 v7：防止缓存干扰，直接更新数据架构
-let holdings = JSON.parse(localStorage.getItem('portfolio_v7'));
+let holdings = JSON.parse(localStorage.getItem('portfolio_v8'));
 
 if (!holdings) {
-  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v6')) || JSON.parse(localStorage.getItem('portfolio_v5'));
-  if(oldHoldings) {
-    holdings = oldHoldings;
-    delete holdings.history;
-    holdings.stocks.forEach((s, i) => { 
-      s.gain = defaultData.stocks[i]?.gain || '+0.00%'; 
-      delete s.cost; 
-    });
-    holdings.crypto.forEach((c, i) => { if(c.costPrice === undefined) c.costPrice = defaultData.crypto[i]?.costPrice || 0; });
-  } else {
-    holdings = defaultData;
-  }
-  localStorage.setItem('portfolio_v7', JSON.stringify(holdings));
+  holdings = defaultData;
+  localStorage.setItem('portfolio_v8', JSON.stringify(holdings));
 }
 
 let prices = {};
@@ -346,8 +325,7 @@ function render() {
     const gainCny = gainU * rate;
     const gainPct = costUsd > 0 ? (gainU / costUsd * 100) : 0;
     
-    // 判断正负号和颜色 (超过一点点误差才算盈亏)
-    const sign = gainCny > 0.005 ? '+' : (gainCny < -0.005 ? '-' : '');
+    const sign = gainCny > 0.005 ? '+' : (gainCny < -0.005 ? '' : ''); // 如果是负数，toFixed自带负号
     const colorClass = gainCny > 0.01 ? 'tg' : (gainCny < -0.01 ? 'tr' : 'tn');
     
     let tagStr = '获取中...';
@@ -357,8 +335,7 @@ function render() {
          tagStr = '= ¥' + rate.toFixed(2);
          pstr = '$1.00';
       } else {
-         // 强制保留两位小数，并用人民币¥作为单位
-         tagStr = `${sign}${Math.abs(gainCny).toFixed(2)}¥ (${sign}${Math.abs(gainPct).toFixed(2)}%)`;
+         tagStr = `${sign}${gainCny.toFixed(2)}¥ (${sign}${gainPct.toFixed(2)}%)`;
          pstr = '$' + (p < 1 ? p.toFixed(6) : p.toLocaleString());
       }
     }
@@ -382,9 +359,18 @@ function toggleSection(id) { document.getElementById(id).classList.toggle('colla
 
 function openModal() {
   document.getElementById('stockInputs').innerHTML = holdings.stocks.map((s,i) => `
-    <div class="modal-input-card modal-input-row">
+    <div class="modal-input-card">
       <label>${s.icon} ${s.name}</label>
-      <input type="number" id="s_val_${i}" value="${s.value}" step="0.01">
+      <div class="input-row">
+        <div class="input-group">
+          <span>现值金额 (¥)</span>
+          <input type="number" id="s_val_${i}" value="${s.value}" step="0.01">
+        </div>
+        <div class="input-group">
+          <span>涨跌幅标签</span>
+          <input type="text" id="s_gain_${i}" value="${s.gain}">
+        </div>
+      </div>
     </div>
   `).join('');
 
@@ -413,7 +399,9 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 function saveAndClose() {
   holdings.stocks.forEach((s,i) => { 
     const v = parseFloat(document.getElementById(`s_val_${i}`).value); 
+    const g = document.getElementById(`s_gain_${i}`).value;
     if(!isNaN(v)) s.value = v; 
+    s.gain = g; 
   });
   
   holdings.crypto.forEach((c,i) => { 
@@ -426,7 +414,7 @@ function saveAndClose() {
   const r = parseFloat(document.getElementById('inputRate').value);
   if(!isNaN(r)) holdings.usdRate = r;
 
-  localStorage.setItem('portfolio_v7', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v8', JSON.stringify(holdings));
   closeModal();
   render();
 }
