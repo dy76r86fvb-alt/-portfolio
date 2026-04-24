@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -88,7 +87,6 @@
     cursor: pointer; box-shadow: 0 8px 32px rgba(0,229,192,0.4); z-index: 50; display: flex; align-items: center; gap: 8px;
   }
 
-  /* 弹窗升级：支持双输入框 */
   .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; overflow-y: auto; padding: 10px 10px 40px; }
   .overlay.open { display: block; }
   .modal { background: #151A22; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 24px 16px; max-width: 480px; margin: 0 auto; position: relative; box-shadow: 0 16px 64px rgba(0,0,0,0.5); }
@@ -101,6 +99,17 @@
   .modal-sec { font-size: 11px; color: #566370; text-transform: uppercase; margin: 20px 0 12px; padding-left: 4px; letter-spacing: 1px; }
   .modal-input-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 8px; }
   .modal-input-card label { font-size: 12px; color: #FFFFFF; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  
+  .modal-input-row { display: flex; align-items: center; gap: 12px; flex-direction: row !important; }
+  .modal-input-row label { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .modal-input-row input {
+    width: 120px; flex-shrink: 0;
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: #fff; font-family: 'Space Mono', monospace; font-size: 12px;
+    padding: 10px 12px; outline: none; text-align: right; transition: border 0.2s;
+  }
+  .modal-input-row input:focus { border-color: #00E5C0; }
+
   .input-row { display: flex; gap: 10px; }
   .input-group { flex: 1; display: flex; flex-direction: column; gap: 4px; }
   .input-group span { font-size: 9px; color: #566370; padding-left: 2px; }
@@ -218,13 +227,13 @@
       <div class="modal-sec">🇺🇸 美股基金（手动输入金额）</div>
       <div id="stockInputs"></div>
       
-      <div class="modal-sec" style="margin-top:24px;">🪙 币圈（输入持仓量与成本价）</div>
+      <div class="modal-sec" style="margin-top:24px;">🪙 币圈（输入持仓量与买入成本价）</div>
       <div id="cryptoInputs"></div>
       
       <div class="modal-sec" style="margin-top:24px;">⚙️ 系统参数</div>
-      <div class="modal-input-card" style="flex-direction:row; align-items:center;">
-        <label style="flex:1;">💵 美元兑人民币汇率</label>
-        <input type="number" id="inputRate" step="0.01" style="width:100px;">
+      <div class="modal-input-card modal-input-row">
+        <label>💵 美元兑人民币汇率</label>
+        <input type="number" id="inputRate" step="0.01">
       </div>
     </div>
 
@@ -236,20 +245,18 @@
 </div>
 
 <script>
-// 初始化与数据迁移逻辑
 let defaultData = {
   usdRate: 7.24,
-  history: [], // 历史净资产记录
+  history: [], 
   stocks: [
-    // cost 字段为新增的总成本金额
-    { name: '华安纳斯达克100 ETF', icon: '📈', value: 353.49, cost: 330 },
-    { name: '摩根标普500',         icon: '📈', value: 382.59, cost: 365 },
-    { name: '广发纳斯达克100 ETF', icon: '📈', value: 108.13, cost: 100 },
-    { name: '易方达标普500',       icon: '📈', value: 84.04,  cost: 80 },
-    { name: '余额宝',              icon: '🏦', value: 30.55,  cost: 30.55 },
+    // 恢复美股的原始结构，移除 cost
+    { name: '华安纳斯达克100 ETF', icon: '📈', value: 353.49, gain: '+7.58%' },
+    { name: '摩根标普500',         icon: '📈', value: 382.59, gain: '+3.81%' },
+    { name: '广发纳斯达克100 ETF', icon: '📈', value: 108.13, gain: '+8.13%' },
+    { name: '易方达标普500',       icon: '📈', value: 84.04,  gain: '+5.05%' },
+    { name: '余额宝',              icon: '🏦', value: 30.55,  gain: '活期'   },
   ],
   crypto: [
-    // costPrice 字段为新增的买入均价(U)
     { symbol: 'BTC',   icon: '₿',  qty: 0.00044249,  costPrice: 62000 },
     { symbol: 'ETH',   icon: 'Ξ',  qty: 0.00649104,  costPrice: 3100  },
     { symbol: 'USDT',  icon: '💵', qty: 30.96545124, costPrice: 1     },
@@ -262,28 +269,31 @@ let defaultData = {
   ]
 };
 
-let holdings = JSON.parse(localStorage.getItem('portfolio_v3'));
+// 升级到 v4，清洗之前的实验数据
+let holdings = JSON.parse(localStorage.getItem('portfolio_v4'));
 
-// 如果是旧版本(v2)迁移到新版本(v3)，补齐 cost 字段
 if (!holdings) {
-  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v2'));
+  let oldHoldings = JSON.parse(localStorage.getItem('portfolio_v3')) || JSON.parse(localStorage.getItem('portfolio_v2'));
   if(oldHoldings) {
     holdings = oldHoldings;
     if(!holdings.history) holdings.history = [];
-    holdings.stocks.forEach((s, i) => { if(s.cost === undefined) s.cost = s.value * 0.95; }); // 默认给5%历史盈利
+    // 将美股数据恢复成原样
+    holdings.stocks.forEach((s, i) => { 
+      s.gain = defaultData.stocks[i]?.gain || '+0.00%'; 
+      delete s.cost; 
+    });
+    // 确保币圈保留成本
     holdings.crypto.forEach((c, i) => { if(c.costPrice === undefined) c.costPrice = defaultData.crypto[i]?.costPrice || 0; });
   } else {
     holdings = defaultData;
   }
-  localStorage.setItem('portfolio_v3', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v4', JSON.stringify(holdings));
 }
 
 let prices = {};
 let myChart = null;
 
-// 图表初始化与绘制
 function drawChart(grandTotal) {
-  // 如果历史为空，生成7天假数据用于初次展示体验
   if (!holdings.history || holdings.history.length === 0) {
       holdings.history = [];
       let base = grandTotal * 0.95; 
@@ -293,21 +303,19 @@ function drawChart(grandTotal) {
       }
   }
 
-  // 记录今日真实数据
   const todayStr = new Date().toISOString().split('T')[0];
   const existingIdx = holdings.history.findIndex(h => h.date === todayStr);
   if(existingIdx >= 0) { holdings.history[existingIdx].total = grandTotal; } 
   else { holdings.history.push({ date: todayStr, total: grandTotal }); }
-  if(holdings.history.length > 30) holdings.history.shift(); // 最多保留30天
+  if(holdings.history.length > 30) holdings.history.shift();
 
-  // 计算区间盈亏
   const oldest = holdings.history[0].total;
   const trendPct = ((grandTotal - oldest) / oldest * 100).toFixed(2);
   const trendEl = document.getElementById('trendPnl');
   trendEl.textContent = (trendPct >= 0 ? '+' : '') + trendPct + '%';
   trendEl.style.color = trendPct >= 0 ? '#00E5C0' : '#FF4466';
 
-  const labels = holdings.history.map(h => h.date.substring(5)); // 取 MM-DD
+  const labels = holdings.history.map(h => h.date.substring(5));
   const data = holdings.history.map(h => Math.round(h.total));
 
   const ctx = document.getElementById('historyChart').getContext('2d');
@@ -326,24 +334,14 @@ function drawChart(grandTotal) {
       data: {
         labels: labels,
         datasets: [{
-          data: data,
-          borderColor: '#00E5C0',
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-          backgroundColor: gradient,
-          fill: true,
-          tension: 0.4
+          data: data, borderColor: '#00E5C0', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
+          backgroundColor: gradient, fill: true, tension: 0.4
         }]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-        scales: {
-          x: { display: false },
-          y: { display: false, min: Math.min(...data) * 0.98 }
-        },
+        scales: { x: { display: false }, y: { display: false, min: Math.min(...data) * 0.98 } },
         interaction: { mode: 'nearest', axis: 'x', intersect: false }
       }
     });
@@ -373,22 +371,16 @@ async function fetchPrices() {
 function render() {
   const rate = holdings.usdRate;
   
-  // 1. 计算各项总额
-  let stockTotal = 0, stockCostTotal = 0;
-  holdings.stocks.forEach(s => { stockTotal += s.value; stockCostTotal += s.cost; });
+  let stockTotal = 0;
+  holdings.stocks.forEach(s => { stockTotal += s.value; });
   
-  let cryptoTotal = 0, cryptoCostTotal = 0;
-  holdings.crypto.forEach(c => { 
-    const p = prices[c.symbol] || 0;
-    cryptoTotal += c.qty * p * rate; 
-    cryptoCostTotal += c.qty * c.costPrice * rate;
-  });
+  let cryptoTotal = 0;
+  holdings.crypto.forEach(c => { cryptoTotal += c.qty * (prices[c.symbol] || 0) * rate; });
 
   const grand = stockTotal + cryptoTotal;
   const sp = grand ? (stockTotal / grand * 100).toFixed(1) : 0;
   const cp = grand ? (cryptoTotal / grand * 100).toFixed(1) : 0;
 
-  // 2. 更新头部 UI
   document.getElementById('totalDisplay').textContent = grand.toLocaleString(undefined, {maximumFractionDigits:0});
   document.getElementById('pieTotalVal').textContent = '¥' + Math.round(grand);
   document.getElementById('stockTotalDisplay').textContent = '¥' + stockTotal.toFixed(0);
@@ -400,7 +392,6 @@ function render() {
   document.getElementById('stockSectionPct').textContent = sp + '%';
   document.getElementById('cryptoSectionPct').textContent = cp + '%';
 
-  // 3. 渲染圆环图
   const C = 238.9;
   const sa = (sp / 100) * C;
   const ca = (cp / 100) * C;
@@ -408,38 +399,29 @@ function render() {
   document.getElementById('pieCrypto').setAttribute('stroke-dasharray', `${ca} ${C}`);
   document.getElementById('pieCrypto').setAttribute('stroke-dashoffset', `-${sa}`);
 
-  // 4. 渲染图表
   drawChart(grand);
 
-  // 5. 渲染美股列表 (计算盈亏)
+  // 恢复美股列表的原版展示（读死标签数据）
   document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => {
-    const gainVal = s.value - s.cost;
-    const gainPct = s.cost > 0 ? (gainVal / s.cost * 100) : 0;
-    const sign = gainVal > 0 ? '+' : '';
-    const colorClass = gainVal > 0.01 ? 'tg' : (gainVal < -0.01 ? 'tr' : 'tn');
-    const tagStr = s.name === '余额宝' ? '活期' : `${sign}¥${Math.abs(gainVal).toFixed(1)} (${sign}${gainPct.toFixed(2)}%)`;
-    
+    const isG = s.gain.includes('+');
+    const colorClass = isG ? 'tg' : (s.gain.includes('%') ? 'tr' : 'tn');
     return `
     <div class="asset-item">
       <div class="iicon">${s.icon}</div>
-      <div class="iinfo">
-        <div class="iname">${s.name}</div>
-        <div class="iprice">成本 ¥${s.cost.toFixed(2)}</div>
-      </div>
-      <div class="ival">
+      <div class="iinfo"><div class="iname">${s.name}</div></div>
+      <div class="ival" style="flex-direction:row; align-items:center; gap:8px;">
         <div class="ival-main">¥${s.value.toFixed(2)}</div>
-        <span class="itag ${colorClass}">${tagStr}</span>
+        <span class="itag ${colorClass}">${s.gain}</span>
       </div>
     </div>`;
   }).join('');
 
-  // 6. 渲染币圈列表 (计算盈亏)
+  // 币圈列表保留动态盈亏计算
   document.getElementById('cryptoItems').innerHTML = holdings.crypto.map(c => {
     const p = prices[c.symbol] || 0;
     const usdVal = c.qty * p;
     const cnyVal = usdVal * rate;
     
-    // 盈亏计算 (基于美元)
     const costUsd = c.qty * c.costPrice;
     const gainU = usdVal - costUsd;
     const gainPct = c.costPrice > 0 ? (gainU / costUsd * 100) : 0;
@@ -463,7 +445,7 @@ function render() {
       <div class="iicon">${c.icon}</div>
       <div class="iinfo">
         <div class="iname">${c.symbol}</div>
-        <div class="iprice">${pstr} · 成本$${c.costPrice}</div>
+        <div class="iprice">${pstr} · 均价$${c.costPrice}</div>
       </div>
       <div class="ival">
         <div class="ival-main">¥${cnyVal.toFixed(2)}</div>
@@ -476,22 +458,15 @@ function render() {
 function toggleSection(id) { document.getElementById(id).classList.toggle('collapsed'); }
 
 function openModal() {
+  // 美股恢复成单行输入模式
   document.getElementById('stockInputs').innerHTML = holdings.stocks.map((s,i) => `
-    <div class="modal-input-card">
+    <div class="modal-input-card modal-input-row">
       <label>${s.icon} ${s.name}</label>
-      <div class="input-row">
-        <div class="input-group">
-          <span>现值金额 (¥)</span>
-          <input type="number" id="s_val_${i}" value="${s.value}" step="0.01">
-        </div>
-        <div class="input-group">
-          <span>投入总成本 (¥)</span>
-          <input type="number" id="s_cost_${i}" value="${s.cost}" step="0.01">
-        </div>
-      </div>
+      <input type="number" id="s_val_${i}" value="${s.value}" step="0.01">
     </div>
   `).join('');
 
+  // 币圈保留双行输入模式
   document.getElementById('cryptoInputs').innerHTML = holdings.crypto.map((c,i) => `
     <div class="modal-input-card">
       <label>${c.icon} ${c.symbol}</label>
@@ -515,13 +490,13 @@ function openModal() {
 function closeModal() { document.getElementById('overlay').classList.remove('open'); }
 
 function saveAndClose() {
+  // 只保存美股现值
   holdings.stocks.forEach((s,i) => { 
     const v = parseFloat(document.getElementById(`s_val_${i}`).value); 
-    const c = parseFloat(document.getElementById(`s_cost_${i}`).value);
     if(!isNaN(v)) s.value = v; 
-    if(!isNaN(c)) s.cost = c; 
   });
   
+  // 保存币圈现值和成本
   holdings.crypto.forEach((c,i) => { 
     const q = parseFloat(document.getElementById(`c_qty_${i}`).value); 
     const cp = parseFloat(document.getElementById(`c_cost_${i}`).value);
@@ -532,12 +507,11 @@ function saveAndClose() {
   const r = parseFloat(document.getElementById('inputRate').value);
   if(!isNaN(r)) holdings.usdRate = r;
 
-  localStorage.setItem('portfolio_v3', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v4', JSON.stringify(holdings));
   closeModal();
   render();
 }
 
-// 启动
 fetchPrices();
 setInterval(fetchPrices, 30000); 
 </script>
