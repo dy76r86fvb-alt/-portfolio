@@ -6,30 +6,49 @@
 <title>资产监控 Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg: #080A0F; /* 深色背景 */
+    --surface-summary: #151A22; /* 概览卡片背景 */
+    --surface-asset: #FFFFFF; /* 资产卡片背景 */
+    --border: #E8EEF4; /* 浅色边框 */
+    --teal: #00E5C0; /* 主题青色 */
+    --orange: #FF8C00; /* 主题橙色 */
+    --green-tag: #39FF6E; /* 涨幅标签文字 */
+    --green-tag-bg: rgba(57,255,110,0.15); /* 涨幅标签背景 */
+    --red-tag: #FF4466;
+    --red-tag-bg: rgba(255,68,102,0.1);
+    --text-on-dark: #FFFFFF; /* 深色背景上的文字 */
+    --text-on-light: #1E2530; /* 浅色背景上的文字 */
+    --muted-on-dark: #566370; /* 深色背景上的次要文字 */
+    --muted-on-light: #8090A0; /* 浅色背景上的次要文字 */
+  }
+  
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { width: 100%; overflow-x: hidden; background: #080A0F; font-family: 'Noto Sans SC', sans-serif; }
+  html, body { width: 100%; overflow-x: hidden; background: var(--bg); font-family: 'Noto Sans SC', sans-serif; }
   body { padding: 24px 16px 100px; }
 
+  /* 头部 Pro 版 */
   .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; padding: 0 4px; }
-  .eyebrow { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 3px; color: #566370; margin-bottom: 8px; text-transform: uppercase; }
+  .eyebrow { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--muted-on-dark); margin-bottom: 8px; text-transform: uppercase; }
   .total-area { display: flex; align-items: baseline; gap: 6px; }
-  .total-symbol { font-size: 20px; color: #FFFFFF; font-weight: 300; }
+  .total-symbol { font-size: 20px; color: var(--text-on-dark); font-weight: 300; }
   .total-val { font-family: 'Space Mono', monospace; font-size: 36px; font-weight: 700; color: #fff; line-height: 1; }
   
   .refresh-btn {
-    background: #151A22; border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px; color: #00E5C0;
+    background: var(--surface-summary); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; color: var(--teal);
     font-family: 'Space Mono', monospace; font-size: 11px;
     padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px;
   }
   .spin { display: inline-block; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .status-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 0 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: #566370; }
-  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #39FF6E; }
+  .status-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 0 4px; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted-on-dark); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-tag); }
   
+  /* 深色总览卡片（匹配 image_3.png） */
   .summary-card { 
-    background: #151A22; 
+    background: var(--surface-summary); 
     border-radius: 16px; 
     padding: 24px 16px; 
     margin-bottom: 16px;
@@ -41,7 +60,7 @@
   .pie-wrap { position: relative; flex-shrink: 0; width: 110px; height: 110px; }
   .pie-wrap svg { transform: rotate(-90deg); }
   .pie-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
-  .pie-center .lbl { font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: #566370; display: block; margin-bottom: 2px; }
+  .pie-center .lbl { font-family: 'Noto Sans SC', sans-serif; font-size: 10px; color: var(--muted-on-dark); display: block; margin-bottom: 2px; }
   .pie-center .val { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
   
   .pie-legend { flex: 1; min-width: 0; }
@@ -49,12 +68,13 @@
   .pie-legend-item:last-child { margin-bottom: 0; }
   .ldot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .linfo { flex: 1; min-width: 0; }
-  .lname { font-size: 11px; color: #566370; margin-bottom: 4px; }
+  .lname { font-size: 11px; color: var(--muted-on-dark); margin-bottom: 4px; }
   .lval { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
   .lpct { font-family: 'Space Mono', monospace; font-size: 12px; flex-shrink: 0; font-weight: 700; }
 
+  /* 浅色资产卡片（匹配 image_3.png） */
   .asset-card { 
-    background: #FFFFFF; 
+    background: var(--surface-asset); 
     border-radius: 16px; 
     margin-bottom: 12px; 
     overflow: hidden; 
@@ -65,31 +85,33 @@
     padding: 20px 16px; 
     cursor: pointer;
   }
-  .asset-title { font-size: 14px; color: #1E2530; font-weight: 700; margin-bottom: 4px; }
-  .asset-total { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: #1E2530; }
+  .asset-title { font-size: 14px; color: var(--text-on-light); font-weight: 700; margin-bottom: 4px; }
+  .asset-total { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; color: var(--text-on-light); }
   .asset-pct { font-family: 'Space Mono', monospace; font-size: 15px; font-weight: 700; }
-  .asset-chev { font-size: 10px; color: #8090A0; transition: transform 0.2s; }
+  .asset-chev { font-size: 10px; color: var(--muted-on-light); transition: transform 0.2s; }
   
   .asset-card.collapsed .asset-items { display: none; }
   .asset-card.collapsed .asset-chev { transform: rotate(-90deg); }
 
-  .asset-items { border-top: 1px solid #E8EEF4; padding: 0 16px; }
-  .asset-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid #E8EEF4; gap: 10px; }
+  /* 资产行样式 */
+  .asset-items { border-top: 1px solid var(--border); padding: 0 16px; }
+  .asset-item { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); gap: 10px; }
   .asset-item:last-child { border-bottom: none; }
   .iicon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
   .iinfo { flex: 1; min-width: 0; }
-  .iname { font-size: 12px; color: #1E2530; font-weight: 500; margin-bottom: 2px; }
-  .iprice { font-family: 'Space Mono', monospace; font-size: 10px; color: #8090A0; }
-  .ival { font-family: 'Space Mono', monospace; font-size: 14px; color: #1E2530; font-weight: 700; flex-shrink: 0; text-align: right; }
+  .iname { font-size: 12px; color: var(--text-on-light); font-weight: 500; margin-bottom: 2px; }
+  .iprice { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted-on-light); }
+  .ival { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--text-on-light); font-weight: 700; flex-shrink: 0; text-align: right; }
   .itag { font-family: 'Space Mono', monospace; font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; }
-  
-  .tg { color: #39FF6E !important; background: rgba(57,255,110,0.15) !important; }
-  .tr { color: #FF4466 !important; background: rgba(255,68,102,0.1) !important; }
-  .tn { color: #8090A0 !important; background: #F1F4F8 !important; }
+  /* 绿色涨幅标签样式修正（匹配 image_3.png） */
+  .tg { color: var(--green-tag) !important; background: var(--green-tag-bg) !important; }
+  .tr { color: var(--red-tag) !important; background: var(--red-tag-bg) !important; }
+  .tn { color: var(--muted-on-light) !important; background: #F1F4F8 !important; }
 
+  /* 浮动编辑按钮（匹配 image_3.png） */
   .edit-btn {
     position: fixed; bottom: 24px; right: 20px;
-    background: #00E5C0; color: #000; border: none;
+    background: var(--teal); color: #000; border: none;
     border-radius: 50px; padding: 14px 24px;
     font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700;
     cursor: pointer; box-shadow: 0 8px 32px rgba(0,229,192,0.4);
@@ -97,6 +119,7 @@
     display: flex; align-items: center; gap: 8px;
   }
 
+  /* 弹窗 UI 升级（匹配 image_4.png，深色模式） */
   .overlay {
     display: none; position: fixed; inset: 0;
     background: rgba(0,0,0,0.85); z-index: 100;
@@ -104,20 +127,20 @@
   }
   .overlay.open { display: block; }
   .modal {
-    background: #151A22; border: 1px solid rgba(255,255,255,0.05);
+    background: var(--surface-summary); border: 1px solid rgba(255,255,255,0.05);
     border-radius: 20px; padding: 24px 16px; max-width: 480px; margin: 0 auto;
     position: relative;
     box-shadow: 0 16px 64px rgba(0,0,0,0.5);
   }
-  .modal-close { position: absolute; top: 20px; right: 20px; color: #566370; font-size: 20px; cursor: pointer; padding: 4px; }
-  .modal-title { font-family: 'Space Mono', monospace; font-size: 13px; color: #00E5C0; margin-bottom: 24px; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .modal-close { position: absolute; top: 20px; right: 20px; color: var(--muted-on-dark); font-size: 20px; cursor: pointer; padding: 4px; }
+  .modal-title { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--teal); margin-bottom: 24px; letter-spacing: 1px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   .modal-content { max-height: 70vh; overflow-y: auto; padding-right: 4px; }
   .modal-content::-webkit-scrollbar { width: 4px; }
   .modal-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
   
-  .modal-sec { font-size: 11px; color: #566370; text-transform: uppercase; margin: 20px 0 12px; padding-left: 4px; letter-spacing: 1px; }
+  .modal-sec { font-size: 11px; color: var(--muted-on-dark); text-transform: uppercase; margin: 20px 0 12px; padding-left: 4px; letter-spacing: 1px; }
   .modal-input-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.03); }
-  .modal-input-card label { font-size: 12px; color: #FFFFFF; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
+  .modal-input-card label { font-size: 12px; color: var(--text-on-dark); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; }
   .modal-input-card input {
     width: 130px; flex-shrink: 0;
     background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
@@ -125,11 +148,11 @@
     font-family: 'Space Mono', monospace; font-size: 12px;
     padding: 9px 12px; outline: none; text-align: right;
   }
-  .modal-input-card input:focus { border-color: #00E5C0; }
+  .modal-input-card input:focus { border-color: var(--teal); }
   
   .mactions { display: flex; gap: 12px; margin-top: 24px; padding: 0 4px; }
-  .btn-save { flex: 1; background: #00E5C0; color: #000; border: none; border-radius: 10px; padding: 14px; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; }
-  .btn-cancel { flex: 1; background: rgba(255,255,255,0.05); color: #566370; border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 14px; font-family: 'Space Mono', monospace; font-size: 12px; cursor: pointer; }
+  .btn-save { flex: 1; background: var(--teal); color: #000; border: none; border-radius: 10px; padding: 14px; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .btn-cancel { flex: 1; background: rgba(255,255,255,0.05); color: var(--dim); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 14px; font-family: 'Space Mono', monospace; font-size: 12px; cursor: pointer; color: var(--muted-on-dark); }
 </style>
 </head>
 <body>
@@ -150,7 +173,7 @@
 
 <div class="status-bar">
   <div class="status-dot"></div>
-  <span id="statusText">币圈价格实时更新 · 法币手动输入</span>
+  <span id="statusText">OKX实时价格 · 每30秒自动刷新</span>
 </div>
 
 <div class="summary-card">
@@ -188,7 +211,7 @@
 <div class="asset-card" id="stockSection">
   <div class="asset-card-header" onclick="toggleSection('stockSection')">
     <div class="shl">
-      <div class="asset-title">美股基金 + 余额宝 + 银行卡</div>
+      <div class="asset-title">传统资产 (基金/余额宝/银行卡)</div>
       <div class="asset-total" id="stockSectionTotal">¥—</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
@@ -240,15 +263,16 @@
 </div>
 
 <script>
-let holdings = JSON.parse(localStorage.getItem('portfolio_v3')) || {
+// 初始化数据，修改了缓存名以防止冲突，并加入了银行卡
+let holdings = JSON.parse(localStorage.getItem('portfolio_v4')) || {
   usdRate: 7.24,
   stocks: [
-    { name: '华安纳斯达克100 ETF', icon: '📈', value: 353.49, gain: '+7.58%' },
-    { name: '摩根标普500',         icon: '📈', value: 382.59, gain: '+3.81%' },
-    { name: '广发纳斯达克100 ETF', icon: '📈', value: 108.13, gain: '+8.13%' },
-    { name: '易方达标普500',       icon: '📈', value: 84.04,  gain: '+5.05%' },
-    { name: '余额宝',              icon: '🏦', value: 30.55,  gain: '活期'   },
-    { name: '银行卡资产',          icon: '💳', value: 0.00,   gain: '储蓄'   }
+    { name: '华安纳斯达克100', icon: '📈', value: 353.49, gain: '+7.58%' },
+    { name: '摩根标普500',     icon: '📈', value: 382.59, gain: '+3.81%' },
+    { name: '广发纳斯达克100', icon: '📈', value: 108.13, gain: '+8.13%' },
+    { name: '易方达标普500',   icon: '📈', value: 84.04,  gain: '+5.05%' },
+    { name: '余额宝',          icon: '🏦', value: 30.55,  gain: '活期'   },
+    { name: '银行卡',          icon: '💳', value: 0.00,   gain: '储蓄'   }
   ],
   crypto: [
     { symbol: 'BTC',   icon: '₿',  qty: 0.00044249   },
@@ -265,6 +289,7 @@ let holdings = JSON.parse(localStorage.getItem('portfolio_v3')) || {
 
 let prices = {};
 
+// 获取价格逻辑 (暂时不处理跨域，保持原样)
 async function fetchPrices() {
   const refreshIcon = document.getElementById('refreshIcon');
   refreshIcon.classList.add('spin');
@@ -280,6 +305,7 @@ async function fetchPrices() {
   render();
 }
 
+// 渲染逻辑 (UI 彻底翻新)
 function render() {
   const rate = holdings.usdRate;
   const stockTotal = holdings.stocks.reduce((s, x) => s + x.value, 0);
@@ -307,6 +333,7 @@ function render() {
   document.getElementById('pieCrypto').setAttribute('stroke-dasharray', `${ca} ${C}`);
   document.getElementById('pieCrypto').setAttribute('stroke-dashoffset', `-${sa}`);
 
+  // 传统资产列表 (浅色 UI)
   document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => `
     <div class="asset-item">
       <div class="iicon">${s.icon}</div>
@@ -317,6 +344,7 @@ function render() {
       </div>
     </div>`).join('');
 
+  // 币圈列表 (浅色 UI)
   document.getElementById('cryptoItems').innerHTML = holdings.crypto.map(c => {
     const p = prices[c.symbol] || 0;
     const usd = c.qty * p;
@@ -337,6 +365,7 @@ function render() {
   }).join('');
 }
 
+// 交互保持一致
 function toggleSection(id) { document.getElementById(id).classList.toggle('collapsed'); }
 
 function openModal() {
@@ -357,7 +386,7 @@ function saveAndClose() {
   holdings.crypto.forEach((c,i) => { const v = parseFloat(document.getElementById(`c${i}`).value); if(!isNaN(v)) c.qty = v; });
   const r = parseFloat(document.getElementById('inputRate').value);
   if(!isNaN(r)) holdings.usdRate = r;
-  localStorage.setItem('portfolio_v3', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v4', JSON.stringify(holdings));
   closeModal();
   render();
 }
