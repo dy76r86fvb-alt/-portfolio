@@ -120,7 +120,6 @@
     border-radius: 6px; color: #fff; font-family: 'Space Mono', monospace; font-size: 12px;
     padding: 8px 4px; outline: none;
   }
-  /* 重新分配宽度以塞下“涨幅”框 */
   .in-icon { width: 28px; text-align: center; }
   .in-name { flex: 1; min-width: 40px; }
   .in-gain { width: 55px; text-align: center; font-size: 10px !important; }
@@ -239,17 +238,27 @@
 </div>
 
 <script>
-let holdings = JSON.parse(localStorage.getItem('portfolio_v6')) || {
+// 这里已经按照你的截图更新了最全、最新的真实数据！
+let holdings = JSON.parse(localStorage.getItem('portfolio_v7')) || {
   usdRate: 7.24,
   stocks: [
-    { name: '华安纳斯达克100', icon: '📈', value: 353.49, gain: '+7.58%' },
-    { name: '余额宝', icon: '🏦', value: 30.55, gain: '活期' },
-    { name: '银行卡', icon: '💳', value: 0.00, gain: '储蓄' }
+    { name: '华安纳斯达克100', icon: '📈', value: 398.39, gain: '+8.11%' },
+    { name: '摩根标普500',     icon: '📈', value: 463.78, gain: '+3.36%' },
+    { name: '广发纳斯达克100', icon: '📈', value: 109.61, gain: '+9.61%' },
+    { name: '易方达标普500',   icon: '📈', value: 84.30,  gain: '+5.37%' },
+    { name: '余额宝',          icon: '🏦', value: 30.55,  gain: '活期'   },
+    { name: '银行卡',          icon: '💳', value: 0.00,   gain: '储蓄'   }
   ],
   crypto: [
-    { symbol: 'BTC', icon: '₿', qty: 0.00044249 },
-    { symbol: 'ETH', icon: 'Ξ', qty: 0.00649104 },
-    { symbol: 'USDT', icon: '💵', qty: 30.96545124 }
+    { symbol: 'BTC',   icon: '₿',  qty: 0.00062282   },
+    { symbol: 'USDT',  icon: '💵', qty: 23.59564164  },
+    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.00822119   },
+    { symbol: 'SOL',   icon: '◎',  qty: 0.11261024   },
+    { symbol: 'BNB',   icon: '🔶', qty: 0.01061437   },
+    { symbol: 'PENGU', icon: '🐧', qty: 642.79382227 },
+    { symbol: 'PEPE',  icon: '🐸', qty: 1482430.843  },
+    { symbol: 'AAVE',  icon: '👻', qty: 0.05195123   },
+    { symbol: 'DOGE',  icon: '🐕', qty: 26.97510733  }
   ]
 };
 
@@ -323,7 +332,6 @@ function openModal() {
 }
 
 function renderModalInputs() {
-  // 美股/传统资产区（加回了 in-gain 框）
   const sDiv = document.getElementById('stockInputs');
   sDiv.innerHTML = tempHoldings.stocks.map((s, i) => `
     <div class="modal-input-card">
@@ -334,7 +342,6 @@ function renderModalInputs() {
       <input type="number" class="in-val" value="${s.value}" step="0.01" onchange="updateTemp('stocks', ${i}, 'value', this.value)">
     </div>`).join('');
 
-  // 币圈区
   const cDiv = document.getElementById('cryptoInputs');
   cDiv.innerHTML = tempHoldings.crypto.map((c, i) => `
     <div class="modal-input-card">
@@ -366,7 +373,7 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 function saveAndClose() {
   tempHoldings.usdRate = parseFloat(document.getElementById('inputRate').value) || holdings.usdRate;
   holdings = tempHoldings;
-  localStorage.setItem('portfolio_v6', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v7', JSON.stringify(holdings));
   closeModal();
   fetchPrices();
 }
