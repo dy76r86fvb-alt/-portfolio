@@ -113,8 +113,11 @@
   .modal-sec-title { font-size: 11px; color: var(--muted-on-dark); text-transform: uppercase; letter-spacing: 1px; }
   .btn-add-mini { background: rgba(0,229,192,0.1); color: var(--teal); border: 1px solid var(--teal); border-radius: 6px; padding: 4px 8px; font-size: 10px; cursor: pointer; }
 
-  .modal-input-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.03); }
+  .modal-input-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.03); }
   .btn-del { color: #FF4466; background: none; border: none; font-size: 16px; cursor: pointer; padding: 0 2px; }
+  
+  .btn-move { color: #8090A0; background: none; border: none; font-size: 10px; cursor: pointer; padding: 2px; }
+  
   .modal-input-card input {
     background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
     border-radius: 6px; color: #fff; font-family: 'Space Mono', monospace; font-size: 12px;
@@ -238,27 +241,28 @@
 </div>
 
 <script>
-// 这里已经按照你的截图更新了最全、最新的真实数据！
-let holdings = JSON.parse(localStorage.getItem('portfolio_v7')) || {
+// 这里已经完全按照你的两张截图数据同步了所有内容
+let holdings = JSON.parse(localStorage.getItem('portfolio_v9')) || {
   usdRate: 7.24,
   stocks: [
-    { name: '华安纳斯达克100', icon: '📈', value: 398.39, gain: '+8.11%' },
-    { name: '摩根标普500',     icon: '📈', value: 463.78, gain: '+3.36%' },
-    { name: '广发纳斯达克100', icon: '📈', value: 109.61, gain: '+9.61%' },
-    { name: '易方达标普500',   icon: '📈', value: 84.30,  gain: '+5.37%' },
-    { name: '余额宝',          icon: '🏦', value: 30.55,  gain: '活期'   },
-    { name: '银行卡',          icon: '💳', value: 0.00,   gain: '储蓄'   }
+    { name: '华安纳斯达克100', icon: '📈', gain: '+8.97%',  value: 412.28 },
+    { name: '摩根标普500',     icon: '📈', gain: '+4.16%',  value: 487.91 },
+    { name: '广发纳斯达克100', icon: '📈', gain: '+10.69%', value: 110.69 },
+    { name: '易方达标普500',   icon: '📈', gain: '+6.43%',  value: 85.14 },
+    { name: '余额宝',          icon: '🏦', gain: '活期',    value: 480.55 },
+    { name: '银行卡',          icon: '💳', gain: '储蓄',    value: 50.00 },
+    { name: '华安纳斯达克100 (APP)', icon: '📈', gain: '涨幅', value: 10.00 }
   ],
   crypto: [
-    { symbol: 'BTC',   icon: '₿',  qty: 0.00062282   },
-    { symbol: 'USDT',  icon: '💵', qty: 23.59564164  },
-    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.00822119   },
-    { symbol: 'SOL',   icon: '◎',  qty: 0.11261024   },
-    { symbol: 'BNB',   icon: '🔶', qty: 0.01061437   },
-    { symbol: 'PENGU', icon: '🐧', qty: 642.79382227 },
-    { symbol: 'PEPE',  icon: '🐸', qty: 1482430.843  },
-    { symbol: 'AAVE',  icon: '👻', qty: 0.05195123   },
-    { symbol: 'DOGE',  icon: '🐕', qty: 26.97510733  }
+    { symbol: 'BTC',   icon: '₿',  qty: 0.0006228 },
+    { symbol: 'USDT',  icon: '💵', qty: 28.64 },
+    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.0082211 },
+    { symbol: 'SOL',   icon: '◎',  qty: 0.1126102 },
+    { symbol: 'BNB',   icon: '🔶', qty: 0.0106143 },
+    { symbol: 'PENGU', icon: '🐧', qty: 642.79382 },
+    { symbol: 'PEPE',  icon: '🐸', qty: 1482430.8 },
+    { symbol: 'AAVE',  icon: '👻', qty: 0.0519512 },
+    { symbol: 'DOGE',  icon: '🐕', qty: 26.975107 }
   ]
 };
 
@@ -335,6 +339,10 @@ function renderModalInputs() {
   const sDiv = document.getElementById('stockInputs');
   sDiv.innerHTML = tempHoldings.stocks.map((s, i) => `
     <div class="modal-input-card">
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <button class="btn-move" onclick="moveAsset('stocks', ${i}, -1)" style="${i===0?'visibility:hidden':''}">&nbsp;▲&nbsp;</button>
+        <button class="btn-move" onclick="moveAsset('stocks', ${i}, 1)" style="${i===tempHoldings.stocks.length-1?'visibility:hidden':''}">&nbsp;▼&nbsp;</button>
+      </div>
       <button class="btn-del" onclick="removeAsset('stocks', ${i})">✕</button>
       <input type="text" class="in-icon" value="${s.icon}" onchange="updateTemp('stocks', ${i}, 'icon', this.value)">
       <input type="text" class="in-name" value="${s.name}" placeholder="名称" onchange="updateTemp('stocks', ${i}, 'name', this.value)">
@@ -345,11 +353,24 @@ function renderModalInputs() {
   const cDiv = document.getElementById('cryptoInputs');
   cDiv.innerHTML = tempHoldings.crypto.map((c, i) => `
     <div class="modal-input-card">
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <button class="btn-move" onclick="moveAsset('crypto', ${i}, -1)" style="${i===0?'visibility:hidden':''}">&nbsp;▲&nbsp;</button>
+        <button class="btn-move" onclick="moveAsset('crypto', ${i}, 1)" style="${i===tempHoldings.crypto.length-1?'visibility:hidden':''}">&nbsp;▼&nbsp;</button>
+      </div>
       <button class="btn-del" onclick="removeAsset('crypto', ${i})">✕</button>
       <input type="text" class="in-icon" value="${c.icon}" onchange="updateTemp('crypto', ${i}, 'icon', this.value)">
       <input type="text" class="in-name" value="${c.symbol}" placeholder="代码" onchange="updateTemp('crypto', ${i}, 'symbol', this.value.toUpperCase())">
       <input type="number" class="in-val" value="${c.qty}" step="any" onchange="updateTemp('crypto', ${i}, 'qty', this.value)">
     </div>`).join('');
+}
+
+function moveAsset(type, index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= tempHoldings[type].length) return;
+  const temp = tempHoldings[type][index];
+  tempHoldings[type][index] = tempHoldings[type][newIndex];
+  tempHoldings[type][newIndex] = temp;
+  renderModalInputs();
 }
 
 function updateTemp(type, index, field, val) {
@@ -373,7 +394,7 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 function saveAndClose() {
   tempHoldings.usdRate = parseFloat(document.getElementById('inputRate').value) || holdings.usdRate;
   holdings = tempHoldings;
-  localStorage.setItem('portfolio_v7', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v9', JSON.stringify(holdings));
   closeModal();
   fetchPrices();
 }
