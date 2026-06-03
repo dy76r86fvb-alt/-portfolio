@@ -271,29 +271,34 @@
 </div>
 
 <script>
-// 初始化默认数据（升级至 v11）
+// 初始化默认数据（严格按照图片复刻，升级至 v12 防止缓存冲突）
 let defaultData = {
-  usdRate: 7.24,
+  usdRate: 6.80, // 根据 USDT 5.85U 对应 39.77 反推得出
   stocks: [
-    { name: '华安纳斯达克100', icon: '📈', gain: '+15.18%',  value: 653.50 },
-    { name: '摩根标普500',     icon: '📈', gain: '+5.75%',  value: 896.57 },
-    { name: '广发纳斯达克100', icon: '📈', gain: '+22.79%', value: 122.79 },
-    { name: '余额宝',          icon: '🏦', gain: '活期',    value: 60.00 }
+    { name: '华安纳斯达克100',       icon: '📈', gain: '+15.18%', value: 653.50 },
+    { name: '华安纳斯达克100 (APP)', icon: '📈', gain: '+4.07%',  value: 207.34 },
+    { name: '3倍做多纳斯达克100ETF', icon: '💰', gain: '+10%',    value: 149.25 },
+    { name: '摩根标普500',           icon: '📈', gain: '+5.75%',  value: 896.57 },
+    { name: '广发纳斯达克100',       icon: '📈', gain: '+22.79%', value: 122.79 },
+    { name: '易方达标普500',         icon: '📈', gain: '+11.39%', value: 89.11 },
+    { name: '余额宝',                icon: '🏦', gain: '活期',    value: 60.00 },
+    { name: '银行卡',                icon: '💳', gain: '储蓄',    value: 0.00 }
   ],
-  usStocks: [
-    { name: '苹果', icon: '🍎', qty: 5, costPrice: 170.50, currentPrice: 185.20 },
-    { name: '特斯拉', icon: '🚗', qty: 2, costPrice: 190.00, currentPrice: 175.50 }
-  ],
+  usStocks: [], // 保留了功能结构，但默认不添加假数据
   crypto: [
-    { symbol: 'BTC',   icon: '₿',  qty: 0.0006228 },
+    { symbol: 'BTC',   icon: '₿',  qty: 0.0007805 },
     { symbol: 'USDT',  icon: '💵', qty: 5.85 },
-    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.0125 },
-    { symbol: 'SOL',   icon: '◎',  qty: 0.1126102 },
-    { symbol: 'PEPE',  icon: '🐸', qty: 1482430.8 }
+    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.01251 },
+    { symbol: 'SOL',   icon: '◎',  qty: 0.11268 },
+    { symbol: 'BNB',   icon: '🔶', qty: 0.010108 },
+    { symbol: 'PENGU', icon: '🐧', qty: 642.96 },
+    { symbol: 'PEPE',  icon: '🐸', qty: 1482430.8 },
+    { symbol: 'AAVE',  icon: '👻', qty: 0.0519 },
+    { symbol: 'DOGE',  icon: '🐕', qty: 26.94 }
   ]
 };
 
-let holdings = JSON.parse(localStorage.getItem('portfolio_v11')) || defaultData;
+let holdings = JSON.parse(localStorage.getItem('portfolio_v12')) || defaultData;
 if (!holdings.usStocks) holdings.usStocks = defaultData.usStocks; 
 
 let prices = {};
@@ -379,29 +384,33 @@ function render() {
     </div>`).join('');
 
   // 渲染股票资产列表
-  document.getElementById('usStockItems').innerHTML = holdings.usStocks.map(u => {
-    const usdVal = u.qty * u.currentPrice;
-    const cnyVal = usdVal * rate;
-    const pnlPct = u.costPrice > 0 ? ((u.currentPrice - u.costPrice) / u.costPrice * 100) : 0;
-    const pnlClass = pnlPct >= 0 ? 'tg' : 'tr';
-    const pnlStr = pnlPct > 0 ? `+${pnlPct.toFixed(2)}%` : `${pnlPct.toFixed(2)}%`;
-    
-    return `
-    <div class="asset-item">
-      <div class="iicon">${u.icon}</div>
-      <div class="iinfo">
-        <div class="iname">${u.name}</div>
-        <div class="iprice">持仓 ${u.qty} | 成本 $${u.costPrice}</div>
-      </div>
-      <div class="ival">
-        <div>¥${cnyVal.toFixed(2)}</div>
-        <div style="display:flex; justify-content:flex-end; align-items:center; gap:6px;">
-          <span class="iprice">${usdVal.toFixed(2)}U</span>
-          <span class="itag-sm ${pnlClass}">${pnlStr}</span>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  if (holdings.usStocks.length === 0) {
+      document.getElementById('usStockItems').innerHTML = `<div style="padding:16px;text-align:center;font-size:12px;color:var(--muted-on-light)">暂无数据，请点击下方编辑添加</div>`;
+  } else {
+      document.getElementById('usStockItems').innerHTML = holdings.usStocks.map(u => {
+        const usdVal = u.qty * u.currentPrice;
+        const cnyVal = usdVal * rate;
+        const pnlPct = u.costPrice > 0 ? ((u.currentPrice - u.costPrice) / u.costPrice * 100) : 0;
+        const pnlClass = pnlPct >= 0 ? 'tg' : 'tr';
+        const pnlStr = pnlPct > 0 ? `+${pnlPct.toFixed(2)}%` : `${pnlPct.toFixed(2)}%`;
+        
+        return `
+        <div class="asset-item">
+          <div class="iicon">${u.icon}</div>
+          <div class="iinfo">
+            <div class="iname">${u.name}</div>
+            <div class="iprice">持仓 ${u.qty} | 成本 $${u.costPrice}</div>
+          </div>
+          <div class="ival">
+            <div>¥${cnyVal.toFixed(2)}</div>
+            <div style="display:flex; justify-content:flex-end; align-items:center; gap:6px;">
+              <span class="iprice">${usdVal.toFixed(2)}U</span>
+              <span class="itag-sm ${pnlClass}">${pnlStr}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+  }
 
   // 渲染币圈资产列表
   document.getElementById('cryptoItems').innerHTML = holdings.crypto.map(c => {
@@ -506,7 +515,7 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 function saveAndClose() {
   tempHoldings.usdRate = parseFloat(document.getElementById('inputRate').value) || holdings.usdRate;
   holdings = tempHoldings;
-  localStorage.setItem('portfolio_v11', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v12', JSON.stringify(holdings));
   closeModal();
   fetchPrices();
 }
