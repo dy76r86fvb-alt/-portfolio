@@ -13,6 +13,7 @@
     --border: #E8EEF4;
     --teal: #00E5C0;
     --orange: #FF8C00;
+    --blue: #00A3FF;
     --green-tag: #39FF6E;
     --green-tag-bg: rgba(57,255,110,0.15);
     --red-tag: #FF4466;
@@ -32,6 +33,7 @@
   .total-area { display: flex; align-items: baseline; gap: 6px; }
   .total-symbol { font-size: 20px; color: var(--text-on-dark); font-weight: 300; }
   .total-val { font-family: 'Space Mono', monospace; font-size: 36px; font-weight: 700; color: #fff; line-height: 1; }
+  .subtitle { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted-on-dark); margin-top: 4px; }
   
   .refresh-btn {
     background: var(--surface-summary); border: 1px solid rgba(255,255,255,0.1);
@@ -57,13 +59,13 @@
   .pie-center .val { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
   
   .pie-legend { flex: 1; min-width: 0; }
-  .pie-legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .pie-legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .pie-legend-item:last-child { margin-bottom: 0; }
   .ldot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .linfo { flex: 1; min-width: 0; }
-  .lname { font-size: 11px; color: var(--muted-on-dark); margin-bottom: 4px; }
-  .lval { font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: #fff; }
-  .lpct { font-family: 'Space Mono', monospace; font-size: 12px; flex-shrink: 0; font-weight: 700; }
+  .linfo { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between;}
+  .lname { font-size: 11px; color: var(--muted-on-dark); }
+  .lval { font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; color: #fff; text-align: right; }
+  .lpct { font-family: 'Space Mono', monospace; font-size: 12px; flex-shrink: 0; font-weight: 700; width: 38px; text-align: right;}
 
   .asset-card { background: var(--surface-asset); border-radius: 16px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
   .asset-card-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 16px; cursor: pointer; }
@@ -84,6 +86,7 @@
   .iprice { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted-on-light); }
   .ival { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--text-on-light); font-weight: 700; flex-shrink: 0; text-align: right; }
   .itag { font-family: 'Space Mono', monospace; font-size: 10px; padding: 3px 6px; border-radius: 4px; font-weight: 700; }
+  .itag-sm { font-family: 'Space Mono', monospace; font-size: 9px; padding: 2px 4px; border-radius: 4px; font-weight: 700; }
   
   .tg { color: var(--green-tag) !important; background: var(--green-tag-bg) !important; }
   .tr { color: var(--red-tag) !important; background: var(--red-tag-bg) !important; }
@@ -115,7 +118,6 @@
 
   .modal-input-card { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 10px 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.03); }
   .btn-del { color: #FF4466; background: none; border: none; font-size: 16px; cursor: pointer; padding: 0 2px; }
-  
   .btn-move { color: #8090A0; background: none; border: none; font-size: 10px; cursor: pointer; padding: 2px; }
   
   .modal-input-card input {
@@ -124,9 +126,10 @@
     padding: 8px 4px; outline: none;
   }
   .in-icon { width: 28px; text-align: center; }
-  .in-name { flex: 1; min-width: 40px; }
+  .in-name { flex: 1; min-width: 35px; }
   .in-gain { width: 55px; text-align: center; font-size: 10px !important; }
   .in-val { width: 75px; text-align: right; }
+  .in-val-sm { width: 50px; text-align: center; font-size: 10px !important; padding: 8px 2px !important; }
   
   .modal-input-card input:focus { border-color: var(--teal); }
   
@@ -153,7 +156,7 @@
 
 <div class="status-bar">
   <div class="status-dot"></div>
-  <span id="statusText">OKX实时价格 · 数据动态管理</span>
+  <span id="statusText">实时汇率 & OKX行情接入中</span>
 </div>
 
 <div class="summary-card">
@@ -162,6 +165,7 @@
       <circle cx="50" cy="50" r="38" fill="none" stroke="#252A35" stroke-width="14"/>
       <circle cx="50" cy="50" r="38" fill="none" stroke="#00E5C0" stroke-width="14" id="pieStock" stroke-dasharray="0 238.9"/>
       <circle cx="50" cy="50" r="38" fill="none" stroke="#FF8C00" stroke-width="14" id="pieCrypto" stroke-dasharray="0 238.9" stroke-dashoffset="0"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#00A3FF" stroke-width="14" id="pieUsStock" stroke-dasharray="0 238.9" stroke-dashoffset="0"/>
     </svg>
     <div class="pie-center">
       <span class="lbl">总资产</span>
@@ -170,20 +174,19 @@
   </div>
   <div class="pie-legend">
     <div class="pie-legend-item">
-      <div class="ldot" style="background:#00E5C0"></div>
-      <div class="linfo">
-        <div class="lname">🏦 传统资产</div>
-        <div class="lval" id="stockTotalDisplay">¥—</div>
-      </div>
-      <div class="lpct" style="color:#00E5C0" id="stockPctDisplay">—%</div>
+      <div class="ldot" style="background:var(--teal)"></div>
+      <div class="linfo"><div class="lname">传统资产</div><div class="lval" id="stockTotalDisplay">¥—</div></div>
+      <div class="lpct" style="color:var(--teal)" id="stockPctDisplay">—%</div>
     </div>
     <div class="pie-legend-item">
-      <div class="ldot" style="background:#FF8C00"></div>
-      <div class="linfo">
-        <div class="lname">🪙 币圈资产</div>
-        <div class="lval" id="cryptoTotalDisplay">¥—</div>
-      </div>
-      <div class="lpct" style="color:#FF8C00" id="cryptoPctDisplay">—%</div>
+      <div class="ldot" style="background:var(--blue)"></div>
+      <div class="linfo"><div class="lname">股票(U本位)</div><div class="lval" id="usStockTotalDisplay">¥—</div></div>
+      <div class="lpct" style="color:var(--blue)" id="usStockPctDisplay">—%</div>
+    </div>
+    <div class="pie-legend-item">
+      <div class="ldot" style="background:var(--orange)"></div>
+      <div class="linfo"><div class="lname">币圈资产</div><div class="lval" id="cryptoTotalDisplay">¥—</div></div>
+      <div class="lpct" style="color:var(--orange)" id="cryptoPctDisplay">—%</div>
     </div>
   </div>
 </div>
@@ -192,18 +195,29 @@
   <div class="asset-card-header" onclick="toggleSection('stockSection')">
     <div class="shl"><div class="asset-title">传统资产</div><div class="asset-total" id="stockSectionTotal">¥—</div></div>
     <div style="display:flex;align-items:center;gap:10px">
-      <div class="asset-pct" style="color:#00E5C0" id="stockSectionPct">—%</div>
+      <div class="asset-pct" style="color:var(--teal)" id="stockSectionPct">—%</div>
       <div class="asset-chev">▼</div>
     </div>
   </div>
   <div class="asset-items" id="stockItems"></div>
 </div>
 
+<div class="asset-card" id="usStockSection">
+  <div class="asset-card-header" onclick="toggleSection('usStockSection')">
+    <div class="shl"><div class="asset-title">股票资产</div><div class="asset-total" id="usStockSectionTotal">¥—</div></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="asset-pct" style="color:var(--blue)" id="usStockSectionPct">—%</div>
+      <div class="asset-chev">▼</div>
+    </div>
+  </div>
+  <div class="asset-items" id="usStockItems"></div>
+</div>
+
 <div class="asset-card" id="cryptoSection">
   <div class="asset-card-header" onclick="toggleSection('cryptoSection')">
     <div class="shl"><div class="asset-title">币圈资产</div><div class="asset-total" id="cryptoSectionTotal">¥—</div></div>
     <div style="display:flex;align-items:center;gap:10px">
-      <div class="asset-pct" style="color:#FF8C00" id="cryptoSectionPct">—%</div>
+      <div class="asset-pct" style="color:var(--orange)" id="cryptoSectionPct">—%</div>
       <div class="asset-chev">▼</div>
     </div>
   </div>
@@ -217,21 +231,37 @@
     <div class="modal-close" onclick="closeModal()">✕</div>
     <div class="modal-title">✎ 编辑资产</div>
     <div class="modal-content">
+      
       <div class="modal-sec-header">
         <div class="modal-sec-title">🏦 传统资产 (¥)</div>
         <button class="btn-add-mini" onclick="addNewAsset('stocks')">+ 添加</button>
       </div>
       <div id="stockInputs"></div>
+
+      <div class="modal-sec-header">
+        <div class="modal-sec-title">📈 股票资产 (单位: U)</div>
+        <button class="btn-add-mini" onclick="addNewAsset('usStocks')">+ 添加</button>
+      </div>
+      <div style="font-size:10px; color:var(--muted-on-dark); padding-left:4px; margin-bottom:8px; display:flex;">
+        <span style="flex:1; margin-left:55px;">名称</span>
+        <span style="width:50px; text-align:center;">数量</span>
+        <span style="width:50px; text-align:center;">成本价</span>
+        <span style="width:50px; text-align:center;">现价</span>
+      </div>
+      <div id="usStockInputs"></div>
+
       <div class="modal-sec-header">
         <div class="modal-sec-title">🪙 币圈资产 (数量)</div>
         <button class="btn-add-mini" onclick="addNewAsset('crypto')">+ 添加</button>
       </div>
       <div id="cryptoInputs"></div>
-      <div class="modal-sec-header"><div class="modal-sec-title">⚙️ 汇率</div></div>
+
+      <div class="modal-sec-header"><div class="modal-sec-title">⚙️ 汇率设置</div></div>
       <div class="modal-input-card" style="padding: 10px 16px;">
         <span style="font-size:12px;color:#fff;flex:1">💵 美元兑人民币</span>
         <input type="number" id="inputRate" style="width:100px;text-align:right;" step="0.01">
       </div>
+
     </div>
     <div class="mactions">
       <button class="btn-cancel" onclick="closeModal()">取消</button>
@@ -241,30 +271,30 @@
 </div>
 
 <script>
-// 这里已经完全按照你的两张截图数据同步了所有内容
-let holdings = JSON.parse(localStorage.getItem('portfolio_v9')) || {
+// 初始化默认数据（升级至 v11）
+let defaultData = {
   usdRate: 7.24,
   stocks: [
-    { name: '华安纳斯达克100', icon: '📈', gain: '+8.97%',  value: 412.28 },
-    { name: '摩根标普500',     icon: '📈', gain: '+4.16%',  value: 487.91 },
-    { name: '广发纳斯达克100', icon: '📈', gain: '+10.69%', value: 110.69 },
-    { name: '易方达标普500',   icon: '📈', gain: '+6.43%',  value: 85.14 },
-    { name: '余额宝',          icon: '🏦', gain: '活期',    value: 480.55 },
-    { name: '银行卡',          icon: '💳', gain: '储蓄',    value: 50.00 },
-    { name: '华安纳斯达克100 (APP)', icon: '📈', gain: '涨幅', value: 10.00 }
+    { name: '华安纳斯达克100', icon: '📈', gain: '+15.18%',  value: 653.50 },
+    { name: '摩根标普500',     icon: '📈', gain: '+5.75%',  value: 896.57 },
+    { name: '广发纳斯达克100', icon: '📈', gain: '+22.79%', value: 122.79 },
+    { name: '余额宝',          icon: '🏦', gain: '活期',    value: 60.00 }
+  ],
+  usStocks: [
+    { name: '苹果', icon: '🍎', qty: 5, costPrice: 170.50, currentPrice: 185.20 },
+    { name: '特斯拉', icon: '🚗', qty: 2, costPrice: 190.00, currentPrice: 175.50 }
   ],
   crypto: [
     { symbol: 'BTC',   icon: '₿',  qty: 0.0006228 },
-    { symbol: 'USDT',  icon: '💵', qty: 28.64 },
-    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.0082211 },
+    { symbol: 'USDT',  icon: '💵', qty: 5.85 },
+    { symbol: 'ETH',   icon: 'Ξ',  qty: 0.0125 },
     { symbol: 'SOL',   icon: '◎',  qty: 0.1126102 },
-    { symbol: 'BNB',   icon: '🔶', qty: 0.0106143 },
-    { symbol: 'PENGU', icon: '🐧', qty: 642.79382 },
-    { symbol: 'PEPE',  icon: '🐸', qty: 1482430.8 },
-    { symbol: 'AAVE',  icon: '👻', qty: 0.0519512 },
-    { symbol: 'DOGE',  icon: '🐕', qty: 26.975107 }
+    { symbol: 'PEPE',  icon: '🐸', qty: 1482430.8 }
   ]
 };
+
+let holdings = JSON.parse(localStorage.getItem('portfolio_v11')) || defaultData;
+if (!holdings.usStocks) holdings.usStocks = defaultData.usStocks; 
 
 let prices = {};
 let tempHoldings = null;
@@ -285,43 +315,109 @@ async function fetchPrices() {
 
 function render() {
   const rate = holdings.usdRate;
+  
+  // 1. 传统资产 (CNY)
   const stockTotal = holdings.stocks.reduce((s, x) => s + x.value, 0);
+  
+  // 2. 股票资产 (USD转CNY)
+  let usStockUsdTotal = holdings.usStocks.reduce((s, u) => s + (u.qty * u.currentPrice), 0);
+  let usStockTotal = usStockUsdTotal * rate;
+
+  // 3. 币圈资产 (USD转CNY)
   let cryptoTotal = holdings.crypto.reduce((s, c) => s + (c.qty * (prices[c.symbol] || 0) * rate), 0);
-  const grand = stockTotal + cryptoTotal;
-  const sp = grand ? (stockTotal / grand * 100).toFixed(1) : 0;
-  const cp = grand ? (cryptoTotal / grand * 100).toFixed(1) : 0;
+  
+  // 总计
+  const grand = stockTotal + usStockTotal + cryptoTotal;
+  
+  // 占比计算
+  const sp = grand ? (stockTotal / grand) : 0;
+  const up = grand ? (usStockTotal / grand) : 0;
+  const cp = grand ? (cryptoTotal / grand) : 0;
 
-  document.getElementById('totalDisplay').textContent = grand.toLocaleString(undefined, {maximumFractionDigits:0});
+  // UI 顶部与图例更新
+  document.getElementById('totalDisplay').textContent = grand.toLocaleString(undefined, {maximumFractionDigits:2});
   document.getElementById('pieTotalVal').textContent = '¥' + Math.round(grand);
+  
   document.getElementById('stockTotalDisplay').textContent = '¥' + Math.round(stockTotal);
+  document.getElementById('stockPctDisplay').textContent = (sp * 100).toFixed(1) + '%';
+  
+  document.getElementById('usStockTotalDisplay').textContent = '¥' + Math.round(usStockTotal);
+  document.getElementById('usStockPctDisplay').textContent = (up * 100).toFixed(1) + '%';
+
   document.getElementById('cryptoTotalDisplay').textContent = '¥' + Math.round(cryptoTotal);
-  document.getElementById('stockPctDisplay').textContent = sp + '%';
-  document.getElementById('cryptoPctDisplay').textContent = cp + '%';
+  document.getElementById('cryptoPctDisplay').textContent = (cp * 100).toFixed(1) + '%';
+
+  // 卡片头部更新
   document.getElementById('stockSectionTotal').textContent = '¥' + stockTotal.toFixed(2);
+  document.getElementById('stockSectionPct').textContent = (sp * 100).toFixed(1) + '%';
+  
+  document.getElementById('usStockSectionTotal').textContent = '¥' + usStockTotal.toFixed(2);
+  document.getElementById('usStockSectionPct').textContent = (up * 100).toFixed(1) + '%';
+
   document.getElementById('cryptoSectionTotal').textContent = '¥' + cryptoTotal.toFixed(2);
-  document.getElementById('stockSectionPct').textContent = sp + '%';
-  document.getElementById('cryptoSectionPct').textContent = cp + '%';
+  document.getElementById('cryptoSectionPct').textContent = (cp * 100).toFixed(1) + '%';
 
+  // 饼状图 SVG 绘制 (圆周长 238.9)
   const C = 238.9;
-  document.getElementById('pieStock').setAttribute('stroke-dasharray', `${(sp/100)*C} ${C}`);
-  document.getElementById('pieCrypto').setAttribute('stroke-dasharray', `${(cp/100)*C} ${C}`);
-  document.getElementById('pieCrypto').setAttribute('stroke-dashoffset', `-${(sp/100)*C}`);
+  document.getElementById('pieStock').setAttribute('stroke-dasharray', `${sp*C} ${C}`);
+  
+  document.getElementById('pieUsStock').setAttribute('stroke-dasharray', `${up*C} ${C}`);
+  document.getElementById('pieUsStock').setAttribute('stroke-dashoffset', `-${sp*C}`);
+  
+  document.getElementById('pieCrypto').setAttribute('stroke-dasharray', `${cp*C} ${C}`);
+  document.getElementById('pieCrypto').setAttribute('stroke-dashoffset', `-${(sp+up)*C}`);
 
+  // 渲染传统资产列表
   document.getElementById('stockItems').innerHTML = holdings.stocks.map(s => `
     <div class="asset-item">
       <div class="iicon">${s.icon}</div>
       <div class="iinfo"><div class="iname">${s.name}</div></div>
-      <div class="ival"><div>¥${s.value.toFixed(2)}</div><span class="itag ${s.gain.includes('+') ? 'tg' : (s.gain.includes('%')?'tr':'tn')}">${s.gain}</span></div>
+      <div class="ival">
+        <div>¥${s.value.toFixed(2)}</div>
+        <span class="itag ${s.gain.includes('+') ? 'tg' : (s.gain.includes('-')?'tr':'tn')}">${s.gain}</span>
+      </div>
     </div>`).join('');
 
+  // 渲染股票资产列表
+  document.getElementById('usStockItems').innerHTML = holdings.usStocks.map(u => {
+    const usdVal = u.qty * u.currentPrice;
+    const cnyVal = usdVal * rate;
+    const pnlPct = u.costPrice > 0 ? ((u.currentPrice - u.costPrice) / u.costPrice * 100) : 0;
+    const pnlClass = pnlPct >= 0 ? 'tg' : 'tr';
+    const pnlStr = pnlPct > 0 ? `+${pnlPct.toFixed(2)}%` : `${pnlPct.toFixed(2)}%`;
+    
+    return `
+    <div class="asset-item">
+      <div class="iicon">${u.icon}</div>
+      <div class="iinfo">
+        <div class="iname">${u.name}</div>
+        <div class="iprice">持仓 ${u.qty} | 成本 $${u.costPrice}</div>
+      </div>
+      <div class="ival">
+        <div>¥${cnyVal.toFixed(2)}</div>
+        <div style="display:flex; justify-content:flex-end; align-items:center; gap:6px;">
+          <span class="iprice">${usdVal.toFixed(2)}U</span>
+          <span class="itag-sm ${pnlClass}">${pnlStr}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 渲染币圈资产列表
   document.getElementById('cryptoItems').innerHTML = holdings.crypto.map(c => {
     const p = prices[c.symbol] || 0;
     const usd = c.qty * p;
     return `
     <div class="asset-item">
       <div class="iicon">${c.icon}</div>
-      <div class="iinfo"><div class="iname">${c.symbol}</div><div class="iprice">${p > 0 ? (c.symbol==='USDT'?'¥'+rate.toFixed(2):'$'+(p<1?p.toFixed(5):p.toLocaleString())):'获取中...'}</div></div>
-      <div class="ival"><div>¥${(usd*rate).toFixed(2)}</div><div class="iprice">${usd.toFixed(2)}U</div></div>
+      <div class="iinfo">
+        <div class="iname">${c.symbol}</div>
+        <div class="iprice">${p > 0 ? (c.symbol==='USDT'?'¥'+rate.toFixed(2):'$'+(p<1?p.toFixed(5):p.toLocaleString())):'获取中...'}</div>
+      </div>
+      <div class="ival">
+        <div>¥${(usd*rate).toFixed(2)}</div>
+        <div class="iprice">${usd.toFixed(2)}U</div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -336,8 +432,8 @@ function openModal() {
 }
 
 function renderModalInputs() {
-  const sDiv = document.getElementById('stockInputs');
-  sDiv.innerHTML = tempHoldings.stocks.map((s, i) => `
+  // 渲染传统资产编辑
+  document.getElementById('stockInputs').innerHTML = tempHoldings.stocks.map((s, i) => `
     <div class="modal-input-card">
       <div style="display:flex; flex-direction:column; gap:2px;">
         <button class="btn-move" onclick="moveAsset('stocks', ${i}, -1)" style="${i===0?'visibility:hidden':''}">&nbsp;▲&nbsp;</button>
@@ -350,8 +446,23 @@ function renderModalInputs() {
       <input type="number" class="in-val" value="${s.value}" step="0.01" onchange="updateTemp('stocks', ${i}, 'value', this.value)">
     </div>`).join('');
 
-  const cDiv = document.getElementById('cryptoInputs');
-  cDiv.innerHTML = tempHoldings.crypto.map((c, i) => `
+  // 渲染股票资产编辑
+  document.getElementById('usStockInputs').innerHTML = tempHoldings.usStocks.map((u, i) => `
+    <div class="modal-input-card">
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <button class="btn-move" onclick="moveAsset('usStocks', ${i}, -1)" style="${i===0?'visibility:hidden':''}">&nbsp;▲&nbsp;</button>
+        <button class="btn-move" onclick="moveAsset('usStocks', ${i}, 1)" style="${i===tempHoldings.usStocks.length-1?'visibility:hidden':''}">&nbsp;▼&nbsp;</button>
+      </div>
+      <button class="btn-del" onclick="removeAsset('usStocks', ${i})">✕</button>
+      <input type="text" class="in-icon" value="${u.icon}" onchange="updateTemp('usStocks', ${i}, 'icon', this.value)">
+      <input type="text" class="in-name" value="${u.name}" placeholder="名称" onchange="updateTemp('usStocks', ${i}, 'name', this.value)">
+      <input type="number" class="in-val-sm" value="${u.qty}" step="any" placeholder="数量" onchange="updateTemp('usStocks', ${i}, 'qty', this.value)">
+      <input type="number" class="in-val-sm" value="${u.costPrice}" step="any" placeholder="成本" onchange="updateTemp('usStocks', ${i}, 'costPrice', this.value)">
+      <input type="number" class="in-val-sm" value="${u.currentPrice}" step="any" placeholder="现价" onchange="updateTemp('usStocks', ${i}, 'currentPrice', this.value)">
+    </div>`).join('');
+
+  // 渲染币圈资产编辑
+  document.getElementById('cryptoInputs').innerHTML = tempHoldings.crypto.map((c, i) => `
     <div class="modal-input-card">
       <div style="display:flex; flex-direction:column; gap:2px;">
         <button class="btn-move" onclick="moveAsset('crypto', ${i}, -1)" style="${i===0?'visibility:hidden':''}">&nbsp;▲&nbsp;</button>
@@ -374,12 +485,13 @@ function moveAsset(type, index, direction) {
 }
 
 function updateTemp(type, index, field, val) {
-  if (field === 'value' || field === 'qty') val = parseFloat(val) || 0;
+  if (field === 'value' || field === 'qty' || field === 'costPrice' || field === 'currentPrice') val = parseFloat(val) || 0;
   tempHoldings[type][index][field] = val;
 }
 
 function addNewAsset(type) {
-  if (type === 'stocks') tempHoldings.stocks.push({ name: '新资产', icon: '💰', value: 0, gain: '手动' });
+  if (type === 'stocks') tempHoldings.stocks.push({ name: '新资产', icon: '💰', value: 0, gain: '+0%' });
+  else if (type === 'usStocks') tempHoldings.usStocks.push({ name: '新股票', icon: '📈', qty: 0, costPrice: 0, currentPrice: 0 });
   else tempHoldings.crypto.push({ symbol: 'NEW', icon: '🪙', qty: 0 });
   renderModalInputs();
 }
@@ -394,11 +506,12 @@ function closeModal() { document.getElementById('overlay').classList.remove('ope
 function saveAndClose() {
   tempHoldings.usdRate = parseFloat(document.getElementById('inputRate').value) || holdings.usdRate;
   holdings = tempHoldings;
-  localStorage.setItem('portfolio_v9', JSON.stringify(holdings));
+  localStorage.setItem('portfolio_v11', JSON.stringify(holdings));
   closeModal();
   fetchPrices();
 }
 
+// 初始化运行
 fetchPrices();
 setInterval(fetchPrices, 30000); 
 </script>
